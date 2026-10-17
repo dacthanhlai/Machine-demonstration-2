@@ -484,6 +484,34 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                   </div>
                 </div>
               )}
+
+              {/* Tùy chọn Ẩn / Hiện Cây cuộn vải cấp liệu phía trước */}
+              {fabricRouting && onChangeFabricRouting && (
+                <div className="pt-2 border-t border-slate-800/80">
+                  <div className="flex items-center justify-between text-[11px] text-slate-300 bg-slate-950/70 p-2 rounded-lg border border-slate-800">
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <Layers className="w-4 h-4 text-indigo-400" />
+                      <span>Cây cuộn vải cấp liệu:</span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onChangeFabricRouting({
+                          ...fabricRouting,
+                          showSupplyRoll: fabricRouting.showSupplyRoll === false ? true : false,
+                        });
+                      }}
+                      className={`px-2.5 py-1 rounded text-[10px] font-bold border transition-all cursor-pointer ${
+                        fabricRouting.showSupplyRoll !== false
+                          ? 'bg-indigo-600 border-indigo-400 text-white shadow-sm'
+                          : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      {fabricRouting.showSupplyRoll !== false ? 'HIỆN' : 'ẨN'}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

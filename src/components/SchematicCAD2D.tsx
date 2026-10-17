@@ -336,8 +336,76 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
+              {/* Cây cuộn vải cấp liệu 2D (Chỉ hiển thị khi fabricRouting.showSupplyRoll !== false) */}
+              {fabricRouting?.showSupplyRoll !== false && (() => {
+                const isLtoR = materialConfig.feedDirection !== 'right_to_left';
+                const p0Raw = sampleMeta[0];
+                const rollRadius = 55;
+                const bridgeDist = 75;
+                const rollWorldX = isLtoR ? p0Raw.x - bridgeDist : p0Raw.x + bridgeDist;
+                const rollWorldY = p0Raw.y + rollRadius;
+                const rollScr = toScreen(rollWorldX, rollWorldY);
+                const floorScr = toScreen(rollWorldX, -20);
+                const rScr = rollRadius * zoom;
+
+                return (
+                  <g opacity="0.92">
+                    {/* Chân đế gá sàn 2D */}
+                    <line
+                      x1={rollScr.x}
+                      y1={rollScr.y}
+                      x2={rollScr.x}
+                      y2={floorScr.y}
+                      stroke="#475569"
+                      strokeWidth={3 * zoom}
+                    />
+                    <rect
+                      x={rollScr.x - 16 * zoom}
+                      y={floorScr.y - 4 * zoom}
+                      width={32 * zoom}
+                      height={5 * zoom}
+                      fill="#334155"
+                      stroke="#64748b"
+                      strokeWidth={1}
+                      rx={2}
+                    />
+                    {/* Vòng tròn thân cuộn vải */}
+                    <circle
+                      cx={rollScr.x}
+                      cy={rollScr.y}
+                      r={rScr}
+                      fill={fabricRouting?.clothColor ? `${fabricRouting.clothColor}28` : '#2563eb28'}
+                      stroke={fabricRouting?.clothColor || '#38bdf8'}
+                      strokeWidth={2 * zoom}
+                      strokeDasharray="5 3"
+                    />
+                    {/* Vòng tròn lõi trục tâm cuộn */}
+                    <circle cx={rollScr.x} cy={rollScr.y} r={5 * zoom} fill="#94a3b8" />
+                    {/* Dải vải xả tiếp tuyến nối thẳng tuyệt đối vào điểm nạp p0 */}
+                    <line
+                      x1={rollScr.x}
+                      y1={startPt.y}
+                      x2={startPt.x}
+                      y2={startPt.y}
+                      stroke="#38bdf8"
+                      strokeWidth={3 * zoom}
+                    />
+                    {/* Nhãn CAD Cuộn vải cấp */}
+                    <text
+                      x={rollScr.x - 45}
+                      y={rollScr.y - rScr - 6}
+                      fill="#93c5fd"
+                      fontSize="9.5"
+                      fontWeight="600"
+                      fontFamily="JetBrains Mono"
+                    >
+                      CUỘN CẤP VẢI (Ø110mm)
+                    </text>
+                  </g>
+                );
+              })()}
               {/* Mũi tên hướng nạp liệu */}
-              <text x={startPt.x - 24} y={startPt.y - 12} fill="#38bdf8" fontSize="11" fontWeight="600" fontFamily="JetBrains Mono">
+              <text x={startPt.x - 16} y={startPt.y - 12} fill="#38bdf8" fontSize="10.5" fontWeight="600" fontFamily="JetBrains Mono">
                 HƯỚNG NẠP VẢI ➔
               </text>
               {/* Điểm chuyển tiếp tại khe dao và bị trống cuốn xuống */}

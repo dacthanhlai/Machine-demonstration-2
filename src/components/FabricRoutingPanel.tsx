@@ -760,6 +760,20 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
           <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
           <span>Hiển thị cụm bông xơ 3D tơi xốp & luồng khí hút khi máy xé vải</span>
         </label>
+
+        {/* Tùy chọn Ẩn / Hiện Cây cuộn vải cấp liệu 3D phía trước */}
+        <label className="flex items-center gap-2 pt-2 border-t border-slate-800 text-[11px] text-slate-300 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={fabricRouting.showSupplyRoll !== false}
+            onChange={(e) =>
+              onChangeFabricRouting({ ...fabricRouting, showSupplyRoll: e.target.checked })
+            }
+            className="accent-indigo-500 rounded cursor-pointer w-4 h-4"
+          />
+          <Layers className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+          <span>Hiển thị cây cuộn vải cấp liệu 3D phía trước (Fabric Supply Roll Stand)</span>
+        </label>
       </div>
 
       {/* 4. Trạng thái chạy mô phỏng & Nguyên lý công nghệ chuẩn */}

@@ -467,6 +467,28 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const [fabricThicknessMm, setFabricThicknessMm] = useState<number>(1.8);
   const [showFabricControls, setShowFabricControls] = useState<boolean>(false);
 
+  // Tùy chọn Ẩn / Hiện Cây vải cấp liệu 3D phía trước (Fabric Supply Roll Stand)
+  const [showSupplyRoll, setShowSupplyRoll] = useState<boolean>(() => {
+    return fabricRouting.showSupplyRoll !== false;
+  });
+
+  useEffect(() => {
+    if (fabricRouting.showSupplyRoll !== undefined) {
+      setShowSupplyRoll(fabricRouting.showSupplyRoll);
+    }
+  }, [fabricRouting.showSupplyRoll]);
+
+  const handleToggleSupplyRoll = () => {
+    const nextVal = !showSupplyRoll;
+    setShowSupplyRoll(nextVal);
+    if (onChangeFabricRouting) {
+      onChangeFabricRouting({
+        ...fabricRouting,
+        showSupplyRoll: nextVal,
+      });
+    }
+  };
+
   // Chế độ tương tác chuột 3D: 'orbit_only' (Xoay tự do không bắt dính vật thể) hoặc 'inspect' (Click chọn trục)
   const [viewInteractionMode, setViewInteractionMode] = useState<'orbit_only' | 'inspect'>('orbit_only');
 
@@ -1299,15 +1321,23 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     }
 
     // DỰNG CỤM CUỘN VẢI CẤP LIỆU 3D ĐẦU VÀO (FABRIC SUPPLY ROLL UNWINDER STAND)
-    if (points.length > 0) {
+    // Tùy chọn ẩn/hiện theo showSupplyRoll. Khi hiển thị, căn chỉnh tiếp tuyến khớp 100% với luồng vải vào máy!
+    if (points.length > 0 && showSupplyRoll) {
       const p0 = points[0];
+      const isLtoR = (materialConfigRef.current || materialConfig)?.feedDirection !== 'right_to_left';
+
       const rollGroup = new THREE.Group();
       rollGroup.name = 'fabric_supply_roll_assembly';
 
       const rollRadius = 55;
-      const rollWidth = clothWidth3D + 25;
-      const rollX = p0.x - 65;
-      const rollY = p0.y + 40;
+      const rollWidth = clothWidth3D + 24;
+      const bridgeDist = 75; // Khoảng cách từ tâm cuộn xả tới điểm nạp vải đầu tiên p0
+
+      // Căn chỉnh tâm cuộn vải:
+      // Để đáy mép dưới cuộn vải trùng khít TUYỆT ĐỐI với cao độ luồng vải vào p0.y:
+      // rollY = p0.y + rollRadius -> Khi đó đáy cuộn: rollY - rollRadius = p0.y
+      const rollX = isLtoR ? p0.x - bridgeDist : p0.x + bridgeDist;
+      const rollY = p0.y + rollRadius;
       rollGroup.position.set(rollX, rollY, 0);
 
       // Nhóm rotor cuộn vải quay liên tục theo tốc độ cấp liệu
@@ -1364,7 +1394,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       rollRotor.add(endDiskBack);
 
       // 3. Trục thép xuyên tâm cuộn xả vải (Core Steel Spindle Axle)
-      const spindleGeo = new THREE.CylinderGeometry(15, 15, rollWidth + 100, 24);
+      const spindleGeo = new THREE.CylinderGeometry(15, 15, rollWidth + 90, 24);
       spindleGeo.rotateX(Math.PI / 2);
       const spindleMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.92, roughness: 0.18 });
       const spindleMesh = new THREE.Mesh(spindleGeo, spindleMat);
@@ -1373,39 +1403,56 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
       rollGroup.add(rollRotor);
       fabricSupplyRollRotorRef.current = rollRotor;
 
-      // 3.5. Dải vải xả mượt mà nối từ mép dưới cuộn vào điểm nạp p0 của máy
-      const bottomX = rollX;
-      const bottomY = rollY - rollRadius;
-      const bridgeDx = p0.x - bottomX;
-      const bridgeDy = p0.y - bottomY;
-      const bridgeLen = Math.hypot(bridgeDx, bridgeDy) || 1;
-      const bridgeGeo = new THREE.BoxGeometry(bridgeLen, Math.max(3.0, fabricThicknessMm * 2.2), clothWidth3D);
+      // 3.5. Dải vải xả mượt mà nối từ mép dưới cuộn vào điểm nạp p0 của máy (Tangent Feed Bridge Sheet)
+      // Trong hệ tọa độ nội bộ của rollGroup:
+      // - Đáy mép xả của cuộn vải tại: x = 0, y = -rollRadius, z = 0
+      // - Điểm nạp p0 của máy tại: x = (isLtoR ? bridgeDist : -bridgeDist), y = -rollRadius, z = 0
+      // Dải vải nối chuẩn tiếp tuyến ngang phẳng tuyệt đối với luồng nạp vào feed roller!
+      const bridgeThick = Math.max(1.0, fabricThicknessMm);
+      const bridgeGeo = new THREE.BoxGeometry(bridgeDist, bridgeThick, clothWidth3D);
       const bridgeMat = new THREE.MeshStandardMaterial({
         map: texture,
         color: fabricRouting.clothColor || '#2563eb',
-        roughness: 0.75,
+        roughness: 0.72,
         metalness: 0.08,
       });
       const bridgeMesh = new THREE.Mesh(bridgeGeo, bridgeMat);
-      bridgeMesh.position.set((bottomX + p0.x) / 2, (bottomY + p0.y) / 2, 0);
-      bridgeMesh.rotation.z = Math.atan2(bridgeDy, bridgeDx);
+      bridgeMesh.position.set(isLtoR ? bridgeDist / 2 : -bridgeDist / 2, -rollRadius, 0);
       rollGroup.add(bridgeMesh);
 
-      // 4. Khung giá đỡ 2 bên cuộn vải gắn cố định xuống sàn
+      // 4. Khung giá đỡ 2 bên cuộn vải (Chân đế gá sàn cố định công nghiệp)
       const standMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, metalness: 0.85, roughness: 0.3 });
+      const floorY = -20; // Cao độ sàn nhà xưởng
+      const legHeight = Math.max(80, rollY - floorY);
+
       [-1, 1].forEach((side) => {
-        const standZ = (rollWidth / 2 + 32) * side;
-        const legHeight = Math.max(80, rollY + 20);
-        const legGeo = new THREE.BoxGeometry(22, legHeight, 16);
+        const standZ = (rollWidth / 2 + 28) * side;
+
+        // Cột trụ đứng
+        const legGeo = new THREE.BoxGeometry(24, legHeight, 18);
         const legMesh = new THREE.Mesh(legGeo, standMat);
         legMesh.position.set(0, -legHeight / 2, standZ);
         rollGroup.add(legMesh);
 
-        // Ổ bi gối đỡ trục (Pillow block bearing)
-        const pillowGeo = new THREE.BoxGeometry(42, 42, 24);
+        // Mặt bích chân đế bắt bulông xuống sàn (Anchor Base Plate)
+        const footGeo = new THREE.BoxGeometry(70, 8, 48);
+        const footMesh = new THREE.Mesh(footGeo, standMat);
+        footMesh.position.set(0, -legHeight + 4, standZ);
+        rollGroup.add(footMesh);
+
+        // Ổ bi gối đỡ trục (Pillow block bearing UCP)
+        const pillowGeo = new THREE.BoxGeometry(44, 44, 26);
         const pillowMesh = new THREE.Mesh(pillowGeo, standMat);
         pillowMesh.position.set(0, 0, standZ);
         rollGroup.add(pillowMesh);
+
+        // Vành bi thép sáng bóng
+        const bearingRingGeo = new THREE.CylinderGeometry(20, 20, 28, 24);
+        bearingRingGeo.rotateX(Math.PI / 2);
+        const bearingRingMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.95, roughness: 0.15 });
+        const bearingRing = new THREE.Mesh(bearingRingGeo, bearingRingMat);
+        bearingRing.position.set(0, 0, standZ);
+        rollGroup.add(bearingRing);
       });
 
       scene.add(rollGroup);
@@ -1426,7 +1473,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         fabricSupplyRollRotorRef.current = null;
       }
     };
-  }, [components, materialConfig, tensions, fabricRouting, fabricWidthMm, fabricThicknessMm]);
+  }, [components, materialConfig, tensions, fabricRouting, fabricWidthMm, fabricThicknessMm, showSupplyRoll]);
 
   // Cập nhật các đường gióng đo cự ly 3D (3D Calipers)
   useEffect(() => {
@@ -1567,7 +1614,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         });
 
         // Hoạt ảnh cuộn vải cấp liệu xả xoay tròn liên tục theo tốc độ cấp nguyên liệu
-        if (fabricSupplyRollRotorRef.current) {
+        if (showSupplyRoll && fabricSupplyRollRotorRef.current) {
           const cfg = materialConfigRef.current || materialConfig;
           const speed = Math.max(6.0, cfg?.feedSpeedMPerMin ?? 14.0);
           const dirSign = cfg?.feedDirection === 'left_to_right' ? 1 : -1;
@@ -1954,7 +2001,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     return () => {
       if (animFrameId.current) cancelAnimationFrame(animFrameId.current);
     };
-  }, [components, isRunning, simSpeedMultiplier, suctionConfig]);
+  }, [components, isRunning, simSpeedMultiplier, suctionConfig, showSupplyRoll]);
 
   // Xử lý chuột: Ưu tiên Xoay tự do góc nhìn 3D mượt mà, phân tách rõ Click đứng yên (chọn trục) và Rê chuột (xoay camera)
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -2488,12 +2535,56 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                     </div>
                   </div>
 
-                  <div className="text-[10px] text-slate-400 bg-slate-900/60 p-1.5 rounded border border-slate-800">
-                    💡 Khổ vải hỗ trợ tối đa 2000mm. Độ dày 3D thay đổi rõ rệt các lớp vải cấp vào trống xé.
+                  {/* Tùy chọn Ẩn / Hiện Cây cuộn vải cấp liệu phía trước */}
+                  <div className="pt-2 border-t border-slate-800 space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] text-slate-300 bg-slate-900/80 p-2 rounded-lg border border-slate-800">
+                      <span className="flex items-center gap-1.5 font-medium">
+                        <Layers className="w-4 h-4 text-indigo-400" />
+                        <span>Cây cuộn vải cấp liệu:</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleToggleSupplyRoll}
+                        className={`px-2.5 py-1 rounded text-[10px] font-bold border transition-all cursor-pointer ${
+                          showSupplyRoll
+                            ? 'bg-indigo-600 border-indigo-400 text-white shadow-sm'
+                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        {showSupplyRoll ? 'ĐANG HIỆN' : 'ĐANG ẨN'}
+                      </button>
+                    </div>
+                    <div className="text-[10px] text-slate-400 bg-slate-900/60 p-1.5 rounded border border-slate-800">
+                      💡 Khổ vải hỗ trợ tối đa 2000mm. Cây vải cấp khớp chuẩn xác tiếp tuyến 100% với luồng vải vào máy.
+                    </div>
                   </div>
                 </div>
               )}
             </div>
+
+            {/* Nút bật/tắt nhanh Cây cuộn vải cấp liệu 3D phía trước */}
+            <div className="w-px h-4 bg-slate-700 mx-0.5" />
+            <button
+              onClick={handleToggleSupplyRoll}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[11px] font-semibold transition-all cursor-pointer ${
+                showSupplyRoll
+                  ? 'bg-indigo-950/90 border-indigo-500 text-indigo-300 shadow-sm ring-1 ring-indigo-500/30'
+                  : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-slate-200'
+              }`}
+              title="Bật / tắt hiển thị cây cuộn vải cấp liệu 3D (Fabric Supply Roll Stand) phía trước chỗ cấp liệu"
+            >
+              {showSupplyRoll ? (
+                <>
+                  <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                  <span>Cây vải: HIỆN</span>
+                </>
+              ) : (
+                <>
+                  <EyeOff className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Cây vải: ẨN</span>
+                </>
+              )}
+            </button>
 
             {/* Bật/Tắt đường luồng hút khí động học dưới các trục & Điều chỉnh nhanh độ rộng/rơi xơ */}
             <div className="w-px h-4 bg-slate-700 mx-0.5" />

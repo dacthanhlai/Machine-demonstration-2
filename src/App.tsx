@@ -69,6 +69,7 @@ export default function App() {
     clothWidthMm: initialPreset.fabricRouting?.clothWidthMm ?? 850,
     clothColor: initialPreset.fabricRouting?.clothColor ?? '#2563eb',
     fiberTuftParticles: initialPreset.fabricRouting?.fiberTuftParticles ?? true,
+    showSupplyRoll: initialPreset.fabricRouting?.showSupplyRoll ?? true,
   }));
 
   // Modals & Hiển thị thông số
@@ -917,6 +918,8 @@ export default function App() {
                   onChangeSuctionConfig={setSuctionConfig}
                   materialConfig={materialConfig}
                   fabricRouting={fabricRouting}
+                  onChangeFabricRouting={setFabricRouting}
+                  onChangeMaterialConfig={setMaterialConfig}
                   clearances={clearances}
                   tensions={tensions}
                   isRunning={isRunning}

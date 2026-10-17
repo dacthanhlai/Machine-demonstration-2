@@ -122,6 +122,7 @@ export interface FabricRoutingConfig {
   clothWidthMm: number; // Chiều rộng khổ vải (mm, ví dụ 850mm)
   clothColor: string; // Màu mô hình vải 3D (#3b82f6 denim, #f8fafc cotton, #64748b xám)
   fiberTuftParticles: boolean; // Bật hạt xơ bông bung ra khi gặp trống xé
+  showSupplyRoll?: boolean; // Tùy chọn ẩn / hiện cây cuộn vải cấp liệu 3D phía trước (Fabric Supply Roll Stand)
 }
 
 export interface SavedConfiguration {
