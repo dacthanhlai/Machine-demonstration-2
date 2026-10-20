@@ -5,7 +5,7 @@ import { getLinearVelocity, formatSpeedDisplay, rpmToHz } from '../utils/physics
 import { buildContinuousFabricPath, createNaturalRibbonGeometry, PathSamplePoint } from '../utils/fabricPath';
 import { useLanguage } from '../i18n';
 import { getLocalizedComponentName } from '../utils/localization';
-import { Eye, EyeOff, RotateCcw, Box, Compass, Layers, Target, Sparkles, Sliders, Lock, Wind, ChevronDown, Check, Move, GripHorizontal, Minimize2, Maximize2, X, MousePointer, Hand } from 'lucide-react';
+import { Eye, EyeOff, RotateCcw, Box, Compass, Layers, Target, Sparkles, Sliders, Lock, Wind, ChevronDown, Check, Move, GripHorizontal, Minimize2, Maximize2, X, MousePointer, Hand, ZoomIn } from 'lucide-react';
 
 // Tạo texture vải dệt sợi đan xen thực tế với vạch chuyển động rõ nét
 function createFabricCanvasTexture(clothColor: string): THREE.CanvasTexture {
@@ -156,12 +156,12 @@ function createFluffyCottonParticleTexture(): THREE.CanvasTexture {
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
 }
-
-// Tạo texture bề mặt dây quấn đồ kim răng cưa kim loại cuộn xoắn ốc (Metallic Card Clothing Wire Winding)
-function generateCardClothingCanvasTexture(comp: MachineComponent): THREE.CanvasTexture {
+// Tạo texture bề mặt tang thép công nghiệp và các rãnh quấn dây kim loại nền
+// Tạo texture bề mặt tang thép công nghiệp và các rãnh quấn dải thép nền
+function generateIndustrialDrumTexture(comp: MachineComponent, wirePitchMm?: number): THREE.CanvasTexture {
   const canvas = document.createElement('canvas');
-  canvas.width = 2048;
-  canvas.height = 1024;
+  canvas.width = 1024;
+  canvas.height = 512;
   const ctx = canvas.getContext('2d')!;
 
   const isMain = comp.type === 'main_drum';
@@ -169,88 +169,198 @@ function generateCardClothingCanvasTexture(comp: MachineComponent): THREE.Canvas
   const isStripper = comp.type === 'stripper_roller';
   const isFeed = comp.type === 'feed_roller';
 
-  // Nền kim loại phôi trục sáng bóng công nghiệp
-  const grad = ctx.createLinearGradient(0, 0, 2048, 0);
+  // Nền phôi thép đúc công nghiệp tôi cứng tối màu (PBR Machined Industrial Steel Core)
+  const grad = ctx.createLinearGradient(0, 0, 1024, 0);
   if (isMain) {
-    grad.addColorStop(0, '#0284c7');
-    grad.addColorStop(0.2, '#0ea5e9');
-    grad.addColorStop(0.5, '#38bdf8');
-    grad.addColorStop(0.8, '#0ea5e9');
-    grad.addColorStop(1, '#0284c7');
+    grad.addColorStop(0, '#1c2430');
+    grad.addColorStop(0.25, '#293548');
+    grad.addColorStop(0.5, '#3b4a60');
+    grad.addColorStop(0.75, '#293548');
+    grad.addColorStop(1, '#1c2430');
   } else if (isWorker) {
-    grad.addColorStop(0, '#b45309');
-    grad.addColorStop(0.3, '#f59e0b');
-    grad.addColorStop(0.5, '#fbbf24');
-    grad.addColorStop(0.8, '#f59e0b');
-    grad.addColorStop(1, '#b45309');
+    grad.addColorStop(0, '#222226');
+    grad.addColorStop(0.25, '#333338');
+    grad.addColorStop(0.5, '#44444c');
+    grad.addColorStop(0.75, '#333338');
+    grad.addColorStop(1, '#222226');
   } else if (isStripper) {
-    grad.addColorStop(0, '#be185d');
-    grad.addColorStop(0.3, '#f43f5e');
-    grad.addColorStop(0.5, '#fb7185');
-    grad.addColorStop(0.8, '#f43f5e');
-    grad.addColorStop(1, '#be185d');
+    grad.addColorStop(0, '#1a1816');
+    grad.addColorStop(0.25, '#262320');
+    grad.addColorStop(0.5, '#383430');
+    grad.addColorStop(0.75, '#262320');
+    grad.addColorStop(1, '#1a1816');
   } else {
-    grad.addColorStop(0, '#334155');
-    grad.addColorStop(0.5, '#64748b');
-    grad.addColorStop(1, '#334155');
+    grad.addColorStop(0, '#1c2430');
+    grad.addColorStop(0.5, '#2f3d50');
+    grad.addColorStop(1, '#1c2430');
   }
   ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, 2048, 1024);
+  ctx.fillRect(0, 0, 1024, 512);
 
   if (comp.surfaceType === 'wire_teeth' || isMain || isWorker || isStripper) {
-    // DÂY QUẤN KIM LOẠI ĐỒ KIM CÀO/XÉ DÀY ĐẶC (Dense Metallic Card Clothing Helical Wire)
-    // Hàng trăm nghìn mũi kim vi mô dập nổi san sát nhau phủ kín hoàn toàn bề mặt
-    const wireWidth = isMain ? 4 : 5;
-    const toothPitch = isMain ? 3 : 4;
-    const angleTilt = isMain ? 1.0 : -0.8; // Góc nghiêng ăn sợi của răng kim
+    // 1. Vi cấu trúc xước phay tiện cơ khí dọc theo chu vi (Circumferential Lathe Turning Marks)
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.035)';
+    ctx.lineWidth = 0.75;
+    for (let x = 0; x < 1024; x += 8) {
+      ctx.beginPath();
+      ctx.moveTo(x, 0);
+      ctx.lineTo(x, 512);
+      ctx.stroke();
+    }
 
-    for (let y = 0; y < 1024; y += wireWidth) {
-      // 1. Khe rãnh giữa các vòng dây quấn kề sát nhau
-      ctx.fillStyle = '#090d16';
-      ctx.fillRect(0, y, 2048, 1.0);
+    // 2. Rãnh xoắn ốc quấn dải thép nền khớp chuẩn xác với bước quấn dây kim loại
+    const pitch = wirePitchMm ? Math.max(3, Math.round(wirePitchMm * 1.2)) : (isMain ? 6 : 5);
+    for (let y = 0; y < 512; y += pitch) {
+      // Khe giáp mí giữa các vòng quấn dây kim loại (đường rãnh sâu tối màu)
+      ctx.fillStyle = 'rgba(8, 12, 20, 0.85)';
+      ctx.fillRect(0, y, 1024, 1.4);
 
-      // 2. Chân dải thép dập (Wire Base Shoulder) ánh kim
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-      ctx.fillRect(0, y + 1.0, 2048, wireWidth - 1.5);
-
-      // 3. Hàng răng cưa kim loại dập nổi san sát nhau liên tục dọc theo vòng quấn
-      for (let x = 0; x < 2048; x += toothPitch) {
-        // Hông răng vát thép tôi cứng
-        ctx.fillStyle = '#f1f5f9';
-        ctx.beginPath();
-        ctx.moveTo(x, y + wireWidth - 0.8);
-        ctx.lineTo(x + toothPitch * 0.45 + angleTilt, y + 0.8);
-        ctx.lineTo(x + toothPitch * 0.9, y + wireWidth - 0.8);
-        ctx.closePath();
-        ctx.fill();
-
-        // Mũi răng nhọn hoắt ánh kim cương (Diamond Apex Tip)
-        ctx.fillStyle = '#38bdf8';
-        ctx.fillRect(x + toothPitch * 0.45 + angleTilt - 0.5, y + 0.5, 1.5, 1.5);
-      }
+      // Mép vát phản quang nhẹ của gờ chân dải thép
+      ctx.fillStyle = 'rgba(226, 232, 240, 0.14)';
+      ctx.fillRect(0, y + 1.4, 1024, 0.9);
     }
   } else if (comp.surfaceType === 'fluted_steel' || isFeed) {
-    // Trục ép khía rãnh dọc dày đặc (Densely Ground Longitudinal Fluting)
-    const fluteW = 6;
-    for (let x = 0; x < 2048; x += fluteW) {
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(x, 0, 1.5, 1024);
-
-      ctx.fillStyle = '#cbd5e1';
-      ctx.fillRect(x + 1.5, 0, fluteW - 2, 1024);
-
-      // Sóng gờ sáng bóng
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(x + 1.5, 0, 1.2, 1024);
+    // Trục ép khía rãnh dọc dày đặc kẹp giữ nguyên liệu
+    const fluteW = 8;
+    for (let x = 0; x < 1024; x += fluteW) {
+      ctx.fillStyle = '#090d16';
+      ctx.fillRect(x, 0, 2.2, 512);
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillRect(x + 2.2, 0, fluteW - 2.2, 512);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
+      ctx.fillRect(x + 2.2, 0, 1.2, 512);
     }
   }
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(2, 1);
+  texture.repeat.set(1, 1);
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
+}
+
+// Tạo hình học 3D thật của răng kim đồ kim công nghiệp (Metallic Card Clothing Wire Tooth Geometry)
+// Có chân đế thép liên tục (rib foundation), đáy họng chứa xơ (gullet), vai sống lưng hai đoạn (two-stage spine), góc nghiêng trước cơ học (rake face) và lưỡi đục đỉnh kim (chisel tip)
+function createCardClothingToothGeometry(
+  role: 'main_drum' | 'worker_roller' | 'stripper_roller' | 'other',
+  toothHeight: number,
+  toothPitch: number,
+  toothAngleDeg: number,
+  effBaseWidth?: number
+): THREE.BufferGeometry {
+  const isMain = role === 'main_drum';
+  const isWorker = role === 'worker_roller';
+  const isStripper = role === 'stripper_roller';
+
+  // Kích thước chân đế dải dây quấn kim loại (Continuous Foundation Wire Base along Z)
+  const W_base = effBaseWidth ? Math.max(0.6, effBaseWidth) : (isMain ? 1.25 : isWorker ? 0.95 : 0.88);
+  const W_tip = isMain ? 0.44 : isWorker ? 0.30 : 0.28;
+  const W_mid = (W_base + W_tip) * 0.52;
+
+  // Chiều dài chân đế dải thép dọc theo chu vi (X direction) khớp chuẩn bước răng toothPitch
+  // Đảm bảo chân đế của răng thứ i nối tiếp xúc khít 100% với răng thứ i+1 thành dải dây quấn liên tục
+  const L_base = toothPitch;
+  const H_rib = isMain ? Math.min(1.1, toothHeight * 0.22) : Math.min(0.8, toothHeight * 0.20); // Chiều cao gờ dải đế dập nổi
+
+  // Góc nghiêng làm việc cơ học ăn sợi (Front Rake Angle tilt)
+  // Trống xé chính: Góc nghiêng cào dương mạnh mẽ (+14° đến +24°) xé bung giẻ vụn
+  // Trục chải Worker: Góc nghiêng đối kháng (-10° đến -22°) giữ xơ để răng trống chính chải qua
+  // Trục bóc Stripper: Góc bóc sợi (+12° đến +22°) chuyển sợi trở lại trống
+  let tiltDeg = 90 - toothAngleDeg;
+  if (isMain) {
+    tiltDeg = Math.max(14, Math.min(24, 90 - toothAngleDeg));
+  } else if (isWorker) {
+    tiltDeg = -Math.max(10, Math.min(22, toothAngleDeg - 58));
+  } else if (isStripper) {
+    tiltDeg = Math.max(12, Math.min(22, 90 - toothAngleDeg));
+  }
+
+  const tiltRad = (tiltDeg * Math.PI) / 180;
+  const dxTip = (toothHeight - H_rib) * Math.tan(tiltRad);
+
+  const b_back = -L_base * 0.50;
+  const b_front = L_base * 0.50;
+
+  // Đáy họng răng (Gullet / throat floor) nơi chứa xơ bông
+  const g_x = b_back + L_base * 0.28;
+  // Chân mặt cào trước (Front rake root)
+  const f_x = b_front - L_base * 0.18;
+
+  // Đỉnh lưỡi đục làm việc (Chisel Working Tip Land)
+  const tipCenter = f_x + dxTip;
+  const tipLenBack = isMain ? 0.35 : 0.24;
+  const tipLenFront = isMain ? 0.15 : 0.12;
+  const t_back = tipCenter - tipLenBack;
+  const t_front = tipCenter + tipLenFront;
+
+  // Vai sống lưng gãy hai đoạn (Two-Stage Compound Spine Knuckle) tăng cứng chống uốn gãy
+  const k_y = H_rib + (toothHeight - H_rib) * 0.48;
+  const k_x = (g_x + t_back) * 0.52;
+
+  const vertices = new Float32Array([
+    // 0..3: Đáy chân đế dải thép (Y = 0) cắm tiếp xúc hoàn toàn trên tang trống
+    b_back, 0.0, -W_base / 2,
+    b_back, 0.0,  W_base / 2,
+    b_front, 0.0,  W_base / 2,
+    b_front, 0.0, -W_base / 2,
+
+    // 4..7: Gờ vai chân đế dải thép quấn (Y = H_rib)
+    b_back, H_rib, -W_base / 2,
+    b_back, H_rib,  W_base / 2,
+    b_front, H_rib,  W_base / 2,
+    b_front, H_rib, -W_base / 2,
+
+    // 8..9: Đáy họng kẽ răng chứa xơ (Gullet floor)
+    g_x, H_rib + 0.1, -W_base * 0.46,
+    g_x, H_rib + 0.1,  W_base * 0.46,
+
+    // 10..11: Điểm gãy vai sống lưng răng (Compound spine knuckle)
+    k_x, k_y, -W_mid / 2,
+    k_x, k_y,  W_mid / 2,
+
+    // 12..13: Chân mặt nghiêng cào trước (Front rake root)
+    f_x, H_rib + 0.15, -W_base * 0.46,
+    f_x, H_rib + 0.15,  W_base * 0.46,
+
+    // 14..17: Lưỡi đục đỉnh kim làm việc sắc cạnh (Chisel Working Tip at Y = toothHeight)
+    t_back, toothHeight, -W_tip / 2,
+    t_back, toothHeight,  W_tip / 2,
+    t_front, toothHeight,  W_tip / 2,
+    t_front, toothHeight, -W_tip / 2,
+  ]);
+
+  const indices = [
+    // Đáy chân đế
+    0, 2, 1,   0, 3, 2,
+    // Thành hông chân đế
+    0, 7, 3,   0, 4, 7,
+    1, 2, 6,   1, 6, 5,
+    // Mép giáp mí nối dải thép liên tục
+    3, 6, 2,   3, 7, 6,
+    0, 5, 4,   0, 1, 5,
+    // Chuyển tiếp họng răng (Gullet transition)
+    4, 9, 8,   4, 5, 9,
+    12, 6, 7,  12, 13, 6,
+    // Sống lưng thoát sau đoạn dưới (Lower back clearance slope)
+    8, 11, 10, 8, 9, 11,
+    // Sống lưng thoát sau đoạn trên (Upper back spine slope)
+    10, 15, 14, 10, 11, 15,
+    // Lưỡi đục phẳng đỉnh kim (Chisel tip working land)
+    14, 16, 15, 14, 17, 16,
+    // Mặt cào trước (Front rake face)
+    17, 13, 12, 17, 16, 13,
+    // Hông trái vát thoát (Left tapered flank -Z)
+    8, 10, 14,  8, 14, 12,  12, 14, 17,
+    // Hông phải vát thoát (Right tapered flank +Z)
+    9, 15, 11,  9, 13, 15,  13, 16, 15,
+  ];
+
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
 }
 
 // Tạo dải lưới 3D tấm vải có bề rộng thực tế (Ribbon Quad Strip)
@@ -456,7 +566,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const fabricSupplyRollGroupRef = useRef<THREE.Group | null>(null);
   const fabricSupplyRollRotorRef = useRef<THREE.Group | null>(null);
 
-  const [activeCameraView, setActiveCameraView] = useState<'iso' | 'front' | 'top'>('iso');
+  const [activeCameraView, setActiveCameraView] = useState<'iso' | 'front' | 'top' | 'closeup'>('iso');
   const [showSuctionQuickControls, setShowSuctionQuickControls] = useState<boolean>(false);
   const [showRotationIndicators, setShowRotationIndicators] = useState<boolean>(false);
   const [teethDensityPercent, setTeethDensityPercent] = useState<number>(100);
@@ -583,16 +693,28 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   }, []);
 
   // Quick preset camera views
-  const setCameraView = (view: 'iso' | 'front' | 'top') => {
+  const setCameraView = (view: 'iso' | 'front' | 'top' | 'closeup') => {
     setActiveCameraView(view);
     if (view === 'iso') {
+      cameraTarget.current.set(550, 260, 0);
       cameraSpherical.current = { radius: 1300, phi: Math.PI / 3.2, theta: Math.PI / 4.2 };
     } else if (view === 'front') {
       // Nhìn thẳng mặt cắt trục (mặt phẳng 2D bên hông)
+      cameraTarget.current.set(550, 260, 0);
       cameraSpherical.current = { radius: 1400, phi: Math.PI / 2, theta: 0 };
     } else if (view === 'top') {
       // Nhìn từ trên xuống
+      cameraTarget.current.set(550, 260, 0);
       cameraSpherical.current = { radius: 1300, phi: 0.05, theta: 0 };
+    } else if (view === 'closeup') {
+      // Góc nhìn cận cảnh siêu nét quan sát đồ kim xoắn ốc 3D và khe hở chải xơ giữa trống chính và trục chải
+      const drum = components.find((c) => c.type === 'main_drum');
+      const worker = components.find((c) => c.type === 'worker_roller');
+      const knife = components.find((c) => c.type === 'cutter_knife');
+      const tx = drum ? (worker ? (drum.x * 0.52 + worker.x * 0.48) : knife ? (drum.x * 0.65 + knife.x * 0.35) : drum.x - 120) : 450;
+      const ty = drum ? (worker ? (drum.y * 0.52 + worker.y * 0.48) : knife ? (drum.y * 0.65 + knife.y * 0.35) : drum.y + 80) : 230;
+      cameraTarget.current.set(tx, ty, 15);
+      cameraSpherical.current = { radius: 240, phi: Math.PI / 2.35, theta: Math.PI / 4.8 };
     }
     updateCameraFromSpherical();
   };
@@ -646,26 +768,40 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     const ambientLight = new THREE.AmbientLight(0xffffff, 1.15);
     scene.add(ambientLight);
 
-    // 3. Đèn chính (Key Directional Light) chiếu rọi từ trên cao chếch trước
-    const dirLight1 = new THREE.DirectionalLight(0xffffff, 2.2);
-    dirLight1.position.set(800, 1400, 800);
+    // 3. Đèn chính (Key Directional Light) chiếu rọi từ trên cao chếch trước với bóng đổ tiếp xúc mềm
+    const dirLight1 = new THREE.DirectionalLight(0xffffff, 2.3);
+    dirLight1.position.set(700, 1300, 850);
     dirLight1.castShadow = true;
+    dirLight1.shadow.bias = -0.0003;
+    dirLight1.shadow.radius = 2.0;
     dirLight1.shadow.mapSize.width = 2048;
     dirLight1.shadow.mapSize.height = 2048;
     scene.add(dirLight1);
 
-    // 4. Đèn phụ (Fill Directional Light) làm sáng hông sau và các kẽ hở giữa các trục
-    const dirLight2 = new THREE.DirectionalLight(0xf1f5f9, 1.4);
+    // 4. Đèn rọi vi mô khe chải công nghiệp (Carding Macro Inspection Task Spotlight)
+    // Tập trung luồng sáng trắng lạnh vào vùng tiếp xúc dao cắt, tang xé và trục chải worker
+    const inspectSpotLight = new THREE.SpotLight(0xf8fafc, 2.6, 2200, Math.PI / 4.5, 0.4, 1.2);
+    inspectSpotLight.position.set(300, 750, 500);
+    inspectSpotLight.target.position.set(450, 250, 0);
+    inspectSpotLight.castShadow = true;
+    inspectSpotLight.shadow.bias = -0.0004;
+    inspectSpotLight.shadow.mapSize.width = 1024;
+    inspectSpotLight.shadow.mapSize.height = 1024;
+    scene.add(inspectSpotLight);
+    scene.add(inspectSpotLight.target);
+
+    // 5. Đèn phụ (Fill Directional Light) làm sáng hông sau và các kẽ hở giữa các trục
+    const dirLight2 = new THREE.DirectionalLight(0xf1f5f9, 1.3);
     dirLight2.position.set(-600, 900, -600);
     scene.add(dirLight2);
 
-    // 5. Đèn trực diện góc nhìn người dùng (Front Viewport Light) soi sáng rõ mặt trước tang trống và răng kim
-    const frontLight = new THREE.DirectionalLight(0xffffff, 1.3);
+    // 6. Đèn trực diện góc nhìn người dùng (Front Viewport Light) soi sáng rõ mặt trước tang trống và răng kim
+    const frontLight = new THREE.DirectionalLight(0xffffff, 1.2);
     frontLight.position.set(500, 450, 1100);
     scene.add(frontLight);
 
-    // 6. Đèn viền ánh kim phản chiếu sắc cạnh (Metallic Rim Light)
-    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.0);
+    // 7. Đèn viền ánh kim phản chiếu sắc cạnh (Metallic Rim Light)
+    const rimLight = new THREE.DirectionalLight(0x38bdf8, 1.1);
     rimLight.position.set(500, -200, -900);
     scene.add(rimLight);
 
@@ -1017,49 +1153,55 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         const outerTipRadius = comp.diameter / 2;
 
         // Chiều cao răng kim thực tế theo tiêu chuẩn đồ kim công nghiệp (Metallic Card Clothing Wire Height):
-        // Trống xé chính: ~3.5mm, Trục chải/bóc: ~3.0mm, Trục khác: 2.5mm
-        const toothHeight = isMain ? 3.5 : isWorker || isStripper ? 3.0 : 2.5;
+        // Trống xé chính: 4.5mm (hoặc tùy chỉnh), Trục chải: 3.2mm, Trục bóc: 2.8mm
+        const toothHeight = isMain
+          ? (comp.toothHeightMm || 4.5)
+          : isWorker
+          ? (comp.toothHeightMm || 3.2)
+          : isStripper
+          ? (comp.toothHeightMm || 2.8)
+          : 2.5;
 
         // Bán kính tang thép cơ sở bên dưới lớp quấn kim (Base Bare Drum Shell):
-        // Kim cắm từ tang baseRadius vươn ra ngoài toothHeight, đỉnh kim đạt CHÍNH XÁC outerTipRadius!
+        // Răng kim cắm từ tang baseRadius vươn ra ngoài toothHeight, đỉnh kim đạt CHÍNH XÁC outerTipRadius!
         const baseRadius = isCardingOrDrum ? Math.max(10, outerTipRadius - toothHeight) : outerTipRadius;
 
-        const radialSegments = comp.diameter > 300 ? 64 : 40;
+        // Tăng độ mịn cung tròn chu vi trống (96 phân đoạn cho trống lớn, 64 cho trục chải) triệt tiêu hoàn toàn hiện tượng đa giác gãy khúc
+        const radialSegments = comp.diameter > 300 ? 96 : 64;
         const cylGeo = new THREE.CylinderGeometry(baseRadius, baseRadius, cylinderLength, radialSegments);
-        // Xoay geometry để trục đối xứng nằm theo phương Z, tâm nằm tại (0,0,0)
         cylGeo.rotateX(Math.PI / 2);
 
-        // Chất liệu kim loại công nghiệp sáng bóng cho tang trống và trục
+        // Chất liệu thép đúc công nghiệp tối màu mờ cho tang trống (Industrial Dark Steel)
         let baseColor = 0x64748b;
-        let metalness = 0.82;
-        let roughness = 0.28;
+        let metalness = 0.86;
+        let roughness = 0.38;
 
         if (comp.type === 'main_drum') {
-          baseColor = isSel ? 0x38bdf8 : 0x0ea5e9; // Xanh lam rực rỡ, sáng bóng của trống xé chính
-          metalness = 0.8;
-          roughness = 0.22;
-        } else if (comp.type === 'worker_roller') {
-          baseColor = isSel ? 0xfbbf24 : 0xf59e0b; // Vàng hổ phách trục chải
-          metalness = 0.8;
-          roughness = 0.25;
-        } else if (comp.type === 'stripper_roller') {
-          baseColor = isSel ? 0xf472b6 : 0xf43f5e; // Hồng cánh sen trục bóc
-          metalness = 0.8;
-          roughness = 0.25;
-        } else if (comp.type === 'feed_roller') {
-          baseColor = isSel ? 0xe2e8f0 : 0x94a3b8; // Thép sáng trục cấp liệu
+          baseColor = isSel ? 0x0284c7 : 0x334155; // Thép xám xanh công nghiệp sẫm màu
           metalness = 0.88;
-          roughness = 0.2;
+          roughness = 0.36;
+        } else if (comp.type === 'worker_roller') {
+          baseColor = isSel ? 0xd97706 : 0x3f3f46; // Thép xám phôi máy chải
+          metalness = 0.86;
+          roughness = 0.38;
+        } else if (comp.type === 'stripper_roller') {
+          baseColor = isSel ? 0xbe123c : 0x292524;
+          metalness = 0.86;
+          roughness = 0.38;
+        } else if (comp.type === 'feed_roller') {
+          baseColor = isSel ? 0xe2e8f0 : 0x475569;
+          metalness = 0.90;
+          roughness = 0.32;
         } else if (comp.type === 'condenser_drum') {
-          baseColor = isSel ? 0xc4b5fd : 0x8b5cf6; // Trống ngưng kết
-          metalness = 0.75;
-          roughness = 0.3;
+          baseColor = isSel ? 0xc4b5fd : 0x475569;
+          metalness = 0.82;
+          roughness = 0.35;
         }
 
-        // Bề mặt dây quấn đồ kim răng cưa kim loại cuộn xoắn ốc (Metallic Card Clothing Wire Winding)
-        const cardTexture = generateCardClothingCanvasTexture(comp);
+        // Bề mặt tang thép với rãnh quấn dải thép nền và vết tiện phay cơ khí
+        const drumTexture = generateIndustrialDrumTexture(comp);
         const cylMat = new THREE.MeshStandardMaterial({
-          map: cardTexture,
+          map: drumTexture,
           color: isSel ? 0xffffff : baseColor,
           metalness,
           roughness,
@@ -1068,67 +1210,94 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
         const cylMesh = new THREE.Mesh(cylGeo, cylMat);
         rotorGroup.add(cylMesh);
 
-        // Hàng răng cưa / kim xé 3D thật (3D Metallic Card Clothing Teeth Array)
-        // Chuẩn hóa theo thực tế công nghiệp dệt: DÂY KIM QUẤN XOẮN ỐC LIÊN TỤC QUANH TRỐNG
-        // Các mũi kim phủ kín bề mặt trống, đặt sát nhau không để trống lỗ
+        // HÀNG DÂY KIM QUẤN XOẮN ỐC LIÊN TỤC 3D THẬT (Continuous Helical Metallic Wire Clothing 3D Array)
+        // Mỗi răng kim là một khối hình học 3D thật (chân đế rib, đáy họng gullet, vai sống lưng 2 đoạn, góc nghiêng trước rake face, vát thoát sau và lưỡi đục)
         if (isCardingOrDrum) {
-          // Hệ số mật độ kim tùy chỉnh từ teethDensityPercent (30% - 150%)
-          const densityFactor = Math.max(0.3, Math.min(1.8, teethDensityPercent / 100));
+          const densityFactor = Math.max(0.4, Math.min(1.8, teethDensityPercent / 100));
+          const role: 'main_drum' | 'worker_roller' | 'stripper_roller' | 'other' =
+            isMain ? 'main_drum' : isWorker ? 'worker_roller' : isStripper ? 'stripper_roller' : 'other';
 
-          // Số hàng dọc Z và số răng mỗi vòng: ĐẦY ĐẶT PHỦ KÍN BỀ MẶT
-          const rowsZ = Math.round((isMain ? 110 : isWorker ? 72 : isStripper ? 64 : 48) * Math.sqrt(densityFactor));
-          const teethPerRow = Math.round((isMain ? 210 : isWorker ? 76 : isStripper ? 68 : 52) * Math.sqrt(densityFactor));
-          const totalTeeth = rowsZ * teethPerRow;
+          const tAngle = comp.toothAngleDeg || (isMain ? 72 : isWorker ? 62 : isStripper ? 78 : 65);
 
-          // Góc nghiêng ăn sợi (Front Rake Angle) theo chiều quay chuẩn
-          const toothTilt = isMain
-            ? (comp.rotationDir === 'CW' ? 0.32 : -0.32)
-            : isWorker
-            ? 0.22
-            : -0.22;
+          // Bước quấn xoắn ốc của dải thép dọc trục Z (Helical Wire Ribbon Pitch)
+          // Được cân chỉnh kỹ thuật sao cho các vòng quấn dây kim loại xếp khít mí nhau liên tục
+          const pHelix = (isMain ? 5.8 : isWorker ? 4.2 : isStripper ? 3.8 : 4.5) / Math.sqrt(densityFactor);
+          const numTurns = Math.max(16, Math.round(cylinderLength / pHelix));
+          const effPitch = cylinderLength / numTurns; // Bước quấn thực tế khớp 100% chiều dài thân trục
 
-          // Chân đế kim hình chóp nón dập thép (Metallic wire base)
-          const toothBase = isMain ? 1.4 : 1.2;
+          // Bề rộng dải thép quấn đế rib (Base ribbon width along wire transverse axis):
+          // Đặt bằng 97% của effPitch để các vòng quấn sát sạt nhau, tạo thành dải thép quấn xoắn ốc liên tục 3D thật!
+          const effBaseWidth = effPitch * 0.97;
 
-          const toothGeo = new THREE.ConeGeometry(toothBase, toothHeight, 4);
-          toothGeo.rotateZ(-Math.PI / 2);
-          toothGeo.rotateZ(toothTilt);
+          // Số răng kim trên mỗi vòng 360° chu vi dọc theo dải dây quấn
+          const circ = 2 * Math.PI * baseRadius;
+          const nominalToothPitch = comp.toothPitchMm || (isMain ? 4.6 : isWorker ? 3.4 : isStripper ? 3.2 : 3.6);
+          const effTPitch = nominalToothPitch / Math.sqrt(densityFactor);
+          const teethPerTurn = Math.max(24, Math.round(circ / effTPitch));
+          const totalTeeth = numTurns * teethPerTurn;
 
+          // Tạo hình học 3D thật của răng kim đồ kim (tùy chỉnh riêng biệt theo chức năng của từng trục)
+          // Có chân đế rib liên tục nối kín các răng, đáy họng răng, vai sống lưng 2 đoạn, đỉnh lưỡi đục sắc cạnh
+          const toothGeo = createCardClothingToothGeometry(role, toothHeight, effTPitch, tAngle, effBaseWidth);
+
+          // Chất liệu thép hợp kim tôi cứng sắc cạnh cho răng kim (PBR Hardened Alloy Tool Steel Card Wire)
           const toothMat = new THREE.MeshStandardMaterial({
-            color: 0xf8fafc,
-            metalness: 0.98,
-            roughness: 0.1,
+            color: isMain ? 0xe2e8f0 : isWorker ? 0xf8fafc : 0xe2e8f0,
+            metalness: 0.95,
+            roughness: isMain ? 0.28 : isWorker ? 0.24 : 0.28,
           });
 
-          // Sử dụng InstancedMesh để dựng 20.000+ răng kim trong 1 Draw Call duy nhất (60 FPS mượt mà)
           const instancedTeeth = new THREE.InstancedMesh(toothGeo, toothMat, totalTeeth);
           instancedTeeth.castShadow = true;
+          instancedTeeth.receiveShadow = true;
 
-          const dummy = new THREE.Object3D();
-          let toothIdx = 0;
+          const leadAngle = Math.atan2(effPitch, circ);
+          const cosLead = Math.cos(leadAngle);
+          const sinLead = Math.sin(leadAngle);
 
-          // Điểm đặt dummy nằm ở trung điểm chiều cao kim: baseRadius + toothHeight / 2
-          // Khi đó đáy kim nằm tại baseRadius (mặt tang trống) và đỉnh kim đạt CHÍNH XÁC outerTipRadius
-          const midR = baseRadius + toothHeight / 2;
+          const isCCW = comp.rotationDir !== 'CW';
+          const dirSign = isCCW ? 1 : -1;
+          const mat = new THREE.Matrix4();
 
-          for (let r = 0; r < rowsZ; r++) {
-            const zPos = -cylinderLength / 2 + ((r + 0.5) / rowsZ) * cylinderLength;
-            // Độ lệch góc quấn xoắn ốc liên tục (Continuous Helical Wire Winding Pitch)
-            // Các mũi kim xếp so le khít nhau, phủ kín bề mặt trống như dây quấn máy cào xơ thật
-            const helicalOffset = r * 0.47;
+          for (let idx = 0; idx < totalTeeth; idx++) {
+            // Tọa độ tiến trình liên tục u dọc theo dải xoắn ốc (Continuous Helix Parameter)
+            const u = idx / totalTeeth;
+            const zPos = -cylinderLength / 2 + u * cylinderLength;
+            const theta = u * numTurns * 2 * Math.PI;
 
-            for (let k = 0; k < teethPerRow; k++) {
-              const angle = (k * Math.PI * 2) / teethPerRow + helicalOffset;
-              const x = midR * Math.cos(angle);
-              const y = midR * Math.sin(angle);
+            const cosT = Math.cos(theta);
+            const sinT = Math.sin(theta);
 
-              dummy.position.set(x, y, zPos);
-              dummy.rotation.set(0, 0, angle);
-              dummy.scale.set(1, 1, 1);
-              dummy.updateMatrix();
+            // Vector pháp tuyến hướng tâm ra ngoài (local Y của răng kim)
+            const uyX = cosT;
+            const uyY = sinT;
+            const uyZ = 0;
 
-              instancedTeeth.setMatrixAt(toothIdx++, dummy.matrix);
-            }
+            // Hướng cào xé / tiếp tuyến chu vi (local X của răng kim)
+            // Trục chải Worker có góc nghiêng đối kháng (point-to-point) giữ xơ chống lại trống chính
+            const cutDir = isWorker ? -dirSign : dirSign;
+            const tx = -sinT * cutDir;
+            const ty = cosT * cutDir;
+
+            // Khớp theo góc nghiêng xoắn ốc của dây quấn
+            const uxX = tx * cosLead;
+            const uxY = ty * cosLead;
+            const uxZ = sinLead;
+
+            // Trục ngang thân răng kim (local Z = ux x uy)
+            const uzX = uxY * uyZ - uxZ * uyY;
+            const uzY = uxZ * uyX - uxX * uyZ;
+            const uzZ = uxX * uyY - uxY * uyX;
+
+            // Gán trực tiếp ma trận xoay & tịnh tiến (đáy kim cắm chính xác tại baseRadius)
+            mat.set(
+              uxX, uyX, uzX, cosT * baseRadius,
+              uxY, uyY, uzY, sinT * baseRadius,
+              uxZ, uyZ, uzZ, zPos,
+              0,   0,   0,   1
+            );
+
+            instancedTeeth.setMatrixAt(idx, mat);
           }
 
           instancedTeeth.instanceMatrix.needsUpdate = true;
@@ -1594,22 +1763,23 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
     const animate = (time: number) => {
       animFrameId.current = requestAnimationFrame(animate);
 
-      const delta = (time - lastTime) / 1000;
+      // Sử dụng delta time chuẩn xác giữa các khung hình (giới hạn tối đa 0.08s để tránh giật hình khi chuyển tab)
+      const delta = Math.min((time - lastTime) / 1000, 0.08);
       lastTime = time;
 
       if (isRunning) {
-        // Quay các trục theo đúng RPM và chiều quay CW / CCW
+        // Quay các trục theo đúng RPM và chiều quay CW / CCW quanh trục Z trung tâm
+        // Vận tốc góc angularSpeed = (RPM * 2 * PI / 60) * simSpeedMultiplier (rad/s)
         components.forEach((comp) => {
           if (comp.rotationDir === 'STATIC') return;
           const group = meshesMap.current.get(comp.id);
           if (!group) return;
 
-          // Góc quay rad/s = (RPM * 2 * PI / 60) * simSpeedMultiplier
           const angularSpeed = ((comp.rpm * Math.PI * 2) / 60) * simSpeedMultiplier;
           const sign = comp.rotationDir === 'CW' ? -1 : 1;
           const deltaAngle = sign * angularSpeed * delta;
 
-          // Quay nhóm rotor chuẩn xác quanh tâm trục đối xứng (Z) của chính chi tiết đó
+          // Cả tang trống và toàn bộ hàng chục nghìn răng kim xoắn ốc 3D quay đồng bộ tuyệt đối như 1 khối cơ khí rắn
           const rotor = group.getObjectByName('rotor');
           if (rotor) {
             rotor.rotation.z += deltaAngle;
@@ -1621,7 +1791,6 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           const cfg = materialConfigRef.current || materialConfig;
           const speed = Math.max(6.0, cfg?.feedSpeedMPerMin ?? 14.0);
           const dirSign = cfg?.feedDirection === 'left_to_right' ? 1 : -1;
-          // Tốc độ quay góc thực tế rõ nét của cuộn xả vải
           fabricSupplyRollRotorRef.current.rotation.z += dirSign * (speed * 0.28) * simSpeedMultiplier * delta;
         }
 
@@ -1634,7 +1803,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           clothTextureRef.current.needsUpdate = true;
         }
 
-        // Chuyển động ôm vào tự nhiên: các điểm trên cung ôm trục giữ nguyên độ bám sát, các nhịp tự do có vi sóng nhẹ (4 đỉnh/slice)
+        // Chuyển động biến dạng dải vải 3D: Sóng tự do, độ ôm tiếp tuyến và RÀNG BUỘC CHỐNG XUYÊN THẤU VÀO RĂNG KIM
         if (webRibbonMeshRef.current && baseRibbonPositionsRef.current) {
           const mesh = webRibbonMeshRef.current;
           const geo = mesh.geometry as THREE.BufferGeometry;
@@ -1652,6 +1821,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
               // Kiểm tra xem vị trí có đang ôm sát mặt trục nào không
               let isHuggingRoller = false;
+              let nearestRollerComp: MachineComponent | null = null;
               for (let r = 0; r < components.length; r++) {
                 const comp = components[r];
                 if (comp.type === 'suction_hood') continue;
@@ -1659,6 +1829,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 const distSq = (bx - comp.x) * (bx - comp.x) + (by - comp.y) * (by - comp.y);
                 if (distSq <= radius * radius) {
                   isHuggingRoller = true;
+                  nearestRollerComp = comp;
                   break;
                 }
               }
@@ -1666,16 +1837,40 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               if (!isHuggingRoller) {
                 // Nhịp tự do giữa các trục: sóng vải vi chấn động khí động học tự nhiên
                 const wave = Math.sin((bx * 0.02) - (timeSec * feedSpeed * 0.28 * simSpeedMultiplier)) * 1.6;
-                posArr[(i + 0) * 3 + 1] = baseArr[(i + 0) * 3 + 1] + wave;
-                posArr[(i + 1) * 3 + 1] = baseArr[(i + 1) * 3 + 1] + wave;
-                posArr[(i + 2) * 3 + 1] = baseArr[(i + 2) * 3 + 1] + wave;
-                posArr[(i + 3) * 3 + 1] = baseArr[(i + 3) * 3 + 1] + wave;
+                for (let v = 0; v < 4; v++) {
+                  posArr[(i + v) * 3 + 0] = baseArr[(i + v) * 3 + 0];
+                  posArr[(i + v) * 3 + 1] = baseArr[(i + v) * 3 + 1] + wave;
+                }
               } else {
-                // Vị trí ôm vào trống: giữ ôm sát tuyệt đối và vững chắc
-                posArr[(i + 0) * 3 + 1] = baseArr[(i + 0) * 3 + 1];
-                posArr[(i + 1) * 3 + 1] = baseArr[(i + 1) * 3 + 1];
-                posArr[(i + 2) * 3 + 1] = baseArr[(i + 2) * 3 + 1];
-                posArr[(i + 3) * 3 + 1] = baseArr[(i + 3) * 3 + 1];
+                // Vị trí ôm vào trống / tiếp xúc răng kim:
+                // Mô phỏng tương tác cơ học khi răng kim ăn sâu kéo giật dải vải (Teeth Mechanical Engagement & High-Frequency Micro-Flutter)
+                const isTeethComp = nearestRollerComp?.surfaceType === 'wire_teeth' || nearestRollerComp?.type === 'main_drum' || nearestRollerComp?.type === 'worker_roller';
+                const toothRpm = nearestRollerComp?.rpm || 800;
+                const toothEngageFlutter = isTeethComp
+                  ? Math.sin(timeSec * (toothRpm * 0.12) * simSpeedMultiplier + bx * 0.08) * 0.4
+                  : 0;
+
+                for (let v = 0; v < 4; v++) {
+                  posArr[(i + v) * 3 + 0] = baseArr[(i + v) * 3 + 0];
+                  posArr[(i + v) * 3 + 1] = baseArr[(i + v) * 3 + 1] + toothEngageFlutter;
+                }
+              }
+
+              // RÀNG BUỘC VA CHẠM CƠ HỌC (Collision Constraint): Tuyệt đối không để dải vải chui lọt qua mặt kim hoặc thân tang trống
+              if (nearestRollerComp) {
+                const minR = nearestRollerComp.diameter / 2 + 0.8;
+                for (let v = 0; v < 4; v++) {
+                  const vx = posArr[(i + v) * 3 + 0];
+                  const vy = posArr[(i + v) * 3 + 1];
+                  const cdx = vx - nearestRollerComp.x;
+                  const cdy = vy - nearestRollerComp.y;
+                  const dist = Math.hypot(cdx, cdy);
+                  if (dist > 0 && dist < minR) {
+                    const factor = minR / dist;
+                    posArr[(i + v) * 3 + 0] = nearestRollerComp.x + cdx * factor;
+                    posArr[(i + v) * 3 + 1] = nearestRollerComp.y + cdy * factor;
+                  }
+                }
               }
             }
             posAttr.needsUpdate = true;
@@ -2094,7 +2289,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
     e.preventDefault();
     const zoomFactor = e.deltaY > 0 ? 1.08 : 0.92;
-    cameraSpherical.current.radius = Math.max(350, Math.min(3200, cameraSpherical.current.radius * zoomFactor));
+    cameraSpherical.current.radius = Math.max(70, Math.min(3500, cameraSpherical.current.radius * zoomFactor));
     updateCameraFromSpherical();
   };
 
@@ -2192,6 +2387,16 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             >
               <Layers className="w-3.5 h-3.5" />
               <span>{t('viewport.camera.top')}</span>
+            </button>
+            <button
+              onClick={() => setCameraView('closeup')}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
+                activeCameraView === 'closeup' ? 'bg-sky-600 text-white font-semibold shadow-sm' : 'hover:bg-slate-800 text-slate-300'
+              }`}
+              title={t('viewport.camera.closeupTip')}
+            >
+              <ZoomIn className="w-3.5 h-3.5" />
+              <span>{t('viewport.camera.closeup')}</span>
             </button>
             <div className="w-px h-4 bg-slate-700 mx-0.5" />
             <button
