@@ -3,6 +3,8 @@ import * as THREE from 'three';
 import { MachineComponent, SuctionSystemConfig, MaterialFeedConfig, ClearanceItem, TensionSegment, FabricRoutingConfig } from '../types/machine';
 import { getLinearVelocity, formatSpeedDisplay, rpmToHz } from '../utils/physicsEngine';
 import { buildContinuousFabricPath, createNaturalRibbonGeometry, PathSamplePoint } from '../utils/fabricPath';
+import { useLanguage } from '../i18n';
+import { getLocalizedComponentName } from '../utils/localization';
 import { Eye, EyeOff, RotateCcw, Box, Compass, Layers, Target, Sparkles, Sliders, Lock, Wind, ChevronDown, Check, Move, GripHorizontal, Minimize2, Maximize2, X, MousePointer, Hand } from 'lucide-react';
 
 // Tạo texture vải dệt sợi đan xen thực tế với vạch chuyển động rõ nét
@@ -420,6 +422,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
   onChangeFabricRouting,
   onChangeMaterialConfig,
 }) => {
+  const { t, language } = useLanguage();
   const mountRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
@@ -2148,10 +2151,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
           <button
             onClick={toggleHUD}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-900/80 hover:bg-slate-900 text-sky-300 backdrop-blur-md border border-slate-700/70 rounded-full shadow-xl text-xs font-medium transition-all hover:scale-105"
-            title="Hiện lại toàn bộ thông số và thanh điều hướng (Phím H)"
+            title={t('viewport.zenModeTitle')}
           >
             <Eye className="w-3.5 h-3.5 text-sky-400" />
-            <span>Hiện thông số (HUD) [Phím H]</span>
+            <span>{t('viewport.zenMode')}</span>
           </button>
         </div>
       )}
@@ -2165,36 +2168,36 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
                 activeCameraView === 'iso' ? 'bg-sky-600 text-white font-semibold shadow-sm' : 'hover:bg-slate-800 text-slate-300'
               }`}
-              title="Góc nhìn phối cảnh 3D không gian"
+              title={t('viewport.camera.iso')}
             >
               <Box className="w-3.5 h-3.5" />
-              <span>Phối cảnh 3D</span>
+              <span>{t('viewport.camera.iso')}</span>
             </button>
             <button
               onClick={() => setCameraView('front')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
                 activeCameraView === 'front' ? 'bg-sky-600 text-white font-semibold shadow-sm' : 'hover:bg-slate-800 text-slate-300'
               }`}
-              title="Nhìn trực diện mặt cắt ngang (Side Elevation)"
+              title={t('viewport.camera.front')}
             >
               <Eye className="w-3.5 h-3.5" />
-              <span>Mặt cắt phẳng</span>
+              <span>{t('viewport.camera.front')}</span>
             </button>
             <button
               onClick={() => setCameraView('top')}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-colors whitespace-nowrap shrink-0 ${
                 activeCameraView === 'top' ? 'bg-sky-600 text-white font-semibold shadow-sm' : 'hover:bg-slate-800 text-slate-300'
               }`}
-              title="Nhìn thẳng từ trên nóc máy xuống"
+              title={t('viewport.camera.top')}
             >
               <Layers className="w-3.5 h-3.5" />
-              <span>Từ trên xuống</span>
+              <span>{t('viewport.camera.top')}</span>
             </button>
             <div className="w-px h-4 bg-slate-700 mx-0.5" />
             <button
               onClick={resetCamera}
               className="p-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
-              title="Đặt lại góc quay mặc định"
+              title={t('viewport.resetView')}
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
@@ -2205,10 +2208,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 <button
                   onClick={onOpenCardClothingModal}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-sky-950/80 hover:bg-sky-900 text-sky-300 border border-sky-800/80 transition-colors text-[11px] font-semibold"
-                  title="Soi phóng to chi tiết đồ kim, góc nghiêng răng cưa và bề mặt trống"
+                  title={t('viewport.inspectTeethTitle')}
                 >
                   <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Soi bề mặt kim</span>
+                  <span>{t('viewport.inspectTeeth')}</span>
                 </button>
               </>
             )}
@@ -2218,10 +2221,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 <div className="w-px h-4 bg-slate-700 mx-0.5" />
                 <span
                   className="flex items-center gap-1 font-semibold text-[11px] text-amber-300 bg-amber-950/80 px-2 py-1 rounded-lg border border-amber-600/70"
-                  title="Vị trí dàn máy đang được khóa cố định, chống xê dịch"
+                  title={t('viewport.positionsLockedTitle')}
                 >
                   <Lock className="w-3.5 h-3.5 text-amber-400" />
-                  <span className="hidden sm:inline">Đã khóa vị trí</span>
+                  <span className="hidden sm:inline">{t('viewport.positionsLocked')}</span>
                 </span>
               </>
             )}
@@ -2235,10 +2238,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   ? 'bg-cyan-950/90 border-cyan-500 text-cyan-300 shadow-sm ring-1 ring-cyan-500/30'
                   : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-slate-200'
               }`}
-              title="Bật / tắt hiển thị vòng tròn xanh chỉ thị chiều quay (CW/CCW) quanh các trục"
+              title={t('viewport.rotationIndicatorsTitle')}
             >
               <RotateCcw className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Vòng quay: {showRotationIndicators ? 'HIỆN' : 'ẨN'}</span>
+              <span>{t('viewport.rotationIndicators')}: {showRotationIndicators ? t('fabric.showSupplyRoll') : t('fabric.hideSupplyRoll')}</span>
             </button>
 
             {/* Chế độ tương tác: Xoay tự do (Free Orbit) vs Click chọn trục */}
@@ -2255,21 +2258,17 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   ? 'bg-emerald-950/90 border-emerald-500 text-emerald-300 shadow-sm ring-1 ring-emerald-500/30'
                   : 'bg-sky-950/90 border-sky-500 text-sky-300 shadow-sm ring-1 ring-sky-500/30'
               }`}
-              title={
-                viewInteractionMode === 'orbit_only'
-                  ? 'Đang bật XOAY TỰ DO: Rê chuột nhìn quanh 360° tự do, không sợ bấm nhầm vào trục làm khựng hình. Bấm để bật chế độ click chọn trục.'
-                  : 'Đang bật CLICK CHỌN TRỤC: Click vào trục/trống để xem thông số chi tiết. Bấm để chuyển sang Xoay tự do hoàn toàn.'
-              }
+              title={viewInteractionMode === 'orbit_only' ? t('viewport.freeOrbitMode') : t('viewport.clickSelectMode')}
             >
               {viewInteractionMode === 'orbit_only' ? (
                 <>
                   <Hand className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Xoay 3D tự do</span>
+                  <span>{t('viewport.freeOrbitMode')}</span>
                 </>
               ) : (
                 <>
                   <MousePointer className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Click chọn trục</span>
+                  <span>{t('viewport.clickSelectMode')}</span>
                 </>
               )}
             </button>
@@ -2283,10 +2282,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                     ? 'bg-amber-950/90 border-amber-500 text-amber-300'
                     : 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white'
                 }`}
-                title="Tùy chỉnh số lượng răng kim 3D (%) - Đầy kín bề mặt hoặc tiết kiệm GPU"
+                title={t('viewport.teethDensityTitle')}
               >
                 <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                <span>Mật độ kim: {teethDensityPercent}%</span>
+                <span>{t('viewport.teethDensity')}: {teethDensityPercent}%</span>
                 <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
 
@@ -2294,7 +2293,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 <div className="absolute top-full mt-2 right-0 sm:left-0 z-50 w-72 p-3 bg-slate-950/95 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl space-y-3 text-xs text-slate-200">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-1.5 font-semibold text-amber-300">
                     <span className="flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-amber-400" /> Mật Độ Răng Kim 3D
+                      <Sparkles className="w-4 h-4 text-amber-400" /> {t('viewport.teethDensityHeader')}
                     </span>
                     <button
                       onClick={() => setShowTeethControls(false)}
@@ -2306,9 +2305,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-400">Độ phủ kim trên mặt tang:</span>
+                      <span className="text-slate-400">{t('viewport.teethCoverage')}</span>
                       <span className="font-mono font-bold text-amber-300 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
-                        {teethDensityPercent}% {teethDensityPercent >= 100 ? '(Phủ kín dày đặc)' : ''}
+                        {teethDensityPercent}% {teethDensityPercent >= 100 ? t('viewport.denseCover') : ''}
                       </span>
                     </div>
                     <input
@@ -2331,7 +2330,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                               : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                           }`}
                         >
-                          {val}% {val === 100 ? 'Chuẩn' : val === 150 ? 'Cực đại' : 'Mượt'}
+                          {val}% {val === 100 ? t('viewport.standardTeeth') : val === 150 ? t('viewport.maxTeeth') : t('viewport.smoothTeeth')}
                         </button>
                       ))}
                     </div>
@@ -2349,10 +2348,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                     ? 'bg-emerald-950/90 border-emerald-500 text-emerald-300 shadow-sm ring-1 ring-emerald-500/30'
                     : 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white'
                 }`}
-                title="Tùy chỉnh số lượng xơ cuốn vào và mật độ hạt bông xé tơi (%)"
+                title={t('viewport.fiberDensityTitle')}
               >
                 <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-                <span>Mật độ xơ: {fiberDensityPercent}%</span>
+                <span>{t('viewport.fiberDensity')}: {fiberDensityPercent}%</span>
                 <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
 
@@ -2360,7 +2359,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 <div className="absolute top-full mt-2 right-0 sm:left-0 z-50 w-76 p-3 bg-slate-950/95 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl space-y-3 text-xs text-slate-200">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-1.5 font-semibold text-emerald-300">
                     <span className="flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4 text-emerald-400" /> Mật Độ Xơ Cuốn Vào Máy
+                      <Sparkles className="w-4 h-4 text-emerald-400" /> {t('viewport.fiberDensityHeader')}
                     </span>
                     <button
                       onClick={() => setShowFiberControls(false)}
@@ -2372,9 +2371,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-400">Mật độ xơ bông mô phỏng:</span>
+                      <span className="text-slate-400">{t('viewport.fiberSimDensity')}</span>
                       <span className="font-mono font-bold text-emerald-300 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
-                        {fiberDensityPercent}% {fiberDensityPercent >= 350 ? '(Cực đại / Siêu thực)' : fiberDensityPercent >= 200 ? '(Dày đặc thực tế)' : ''}
+                        {fiberDensityPercent}% {fiberDensityPercent >= 350 ? t('viewport.extremeRealistic') : fiberDensityPercent >= 200 ? t('viewport.realisticDense') : ''}
                       </span>
                     </div>
                     <input
@@ -2388,10 +2387,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                     />
                     <div className="flex justify-between gap-1 pt-1">
                       {[
-                        { val: 100, label: '100% Chuẩn' },
-                        { val: 200, label: '200% Dày' },
-                        { val: 350, label: '350% Cao' },
-                        { val: 500, label: '500% Cực đại' },
+                        { val: 100, label: `100% ${t('viewport.standardTeeth')}` },
+                        { val: 200, label: `200% ${t('viewport.smoothTeeth')}` },
+                        { val: 350, label: `350% ${t('diagnostics.severity.severe')}` },
+                        { val: 500, label: `500% ${t('viewport.maxTeeth')}` },
                       ].map((item) => (
                         <button
                           key={item.val}
@@ -2408,9 +2407,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                       ))}
                     </div>
                     <div className="text-[10px] text-slate-400 bg-slate-900/60 p-2 rounded border border-slate-800 flex justify-between items-center">
-                      <span>Mô phỏng vật lý:</span>
+                      <span>{t('viewport.physicsSim')}</span>
                       <span className="text-sky-300 font-mono font-semibold">
-                        ~{Math.round(240 * (fiberDensityPercent / 100))} cụm bông · ~{Math.round(4500 * (fiberDensityPercent / 100))} hạt xơ tơi
+                        ~{Math.round(240 * (fiberDensityPercent / 100))} {t('viewport.tuftsSummary').replace('{particles}', String(Math.round(4500 * (fiberDensityPercent / 100))))}
                       </span>
                     </div>
                   </div>
@@ -2427,10 +2426,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                     ? 'bg-indigo-950/90 border-indigo-500 text-indigo-300 shadow-sm ring-1 ring-indigo-500/30'
                     : 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white'
                 }`}
-                title="Tùy chỉnh kích thước dải vải cấp vào: khổ rộng (mm), độ dày (mm)"
+                title={`${t('fabric.clothWidth')} (mm) / ${t('fabric.clothThickness')} (mm)`}
               >
                 <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                <span>Khổ vải: {fabricWidthMm}mm</span>
+                <span>{t('fabric.clothWidth')}: {fabricWidthMm}mm</span>
                 <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
 
@@ -2438,7 +2437,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 <div className="absolute top-full mt-2 right-0 sm:left-0 z-50 w-76 p-3 bg-slate-950/95 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl space-y-3 text-xs text-slate-200">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-1.5 font-semibold text-indigo-300">
                     <span className="flex items-center gap-1.5">
-                      <Layers className="w-4 h-4 text-indigo-400" /> Kích Thước Dải Vải Cấp
+                      <Layers className="w-4 h-4 text-indigo-400" /> {t('viewport.fabricSizeHeader')}
                     </span>
                     <button
                       onClick={() => setShowFabricControls(false)}
@@ -2451,7 +2450,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   {/* Bề rộng khổ vải */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-400">Bề rộng khổ vải (Width):</span>
+                      <span className="text-slate-400">{t('viewport.fabricWidthLabel')}</span>
                       <span className="font-mono font-bold text-indigo-300 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
                         {fabricWidthMm} mm
                       </span>
@@ -2503,7 +2502,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   {/* Độ dày dải vải */}
                   <div className="space-y-1.5 pt-1 border-t border-slate-800/80">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-400">Độ dày vải (Thickness):</span>
+                      <span className="text-slate-400">{t('viewport.fabricThickLabel')}</span>
                       <span className="font-mono font-bold text-indigo-300 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
                         {fabricThicknessMm.toFixed(1)} mm
                       </span>
@@ -2540,7 +2539,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                     <div className="flex items-center justify-between text-[11px] text-slate-300 bg-slate-900/80 p-2 rounded-lg border border-slate-800">
                       <span className="flex items-center gap-1.5 font-medium">
                         <Layers className="w-4 h-4 text-indigo-400" />
-                        <span>Cây cuộn vải cấp liệu:</span>
+                        <span>{t('fabric.supplyRoll')}:</span>
                       </span>
                       <button
                         type="button"
@@ -2551,11 +2550,11 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                             : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-slate-200'
                         }`}
                       >
-                        {showSupplyRoll ? 'ĐANG HIỆN' : 'ĐANG ẨN'}
+                        {showSupplyRoll ? t('fabric.supplyRollStateVisible') : t('fabric.supplyRollStateHidden')}
                       </button>
                     </div>
                     <div className="text-[10px] text-slate-400 bg-slate-900/60 p-1.5 rounded border border-slate-800">
-                      💡 Khổ vải hỗ trợ tối đa 2000mm. Cây vải cấp khớp chuẩn xác tiếp tuyến 100% với luồng vải vào máy.
+                      💡 {t('fabric.alignmentNotice')}
                     </div>
                   </div>
                 </div>
@@ -2571,17 +2570,17 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   ? 'bg-indigo-950/90 border-indigo-500 text-indigo-300 shadow-sm ring-1 ring-indigo-500/30'
                   : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-slate-200'
               }`}
-              title="Bật / tắt hiển thị cây cuộn vải cấp liệu 3D (Fabric Supply Roll Stand) phía trước chỗ cấp liệu"
+              title={t('fabric.supplyRollToggle')}
             >
               {showSupplyRoll ? (
                 <>
                   <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Cây vải: HIỆN</span>
+                  <span>{t('fabric.supplyRoll')}: {t('fabric.showSupplyRoll')}</span>
                 </>
               ) : (
                 <>
                   <EyeOff className="w-3.5 h-3.5 text-slate-400" />
-                  <span>Cây vải: ẨN</span>
+                  <span>{t('fabric.supplyRoll')}: {t('fabric.hideSupplyRoll')}</span>
                 </>
               )}
             </button>
@@ -2601,10 +2600,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   ? 'bg-emerald-950/90 border-emerald-500 text-emerald-300 shadow-sm ring-1 ring-emerald-500/30'
                   : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-slate-200'
               }`}
-              title="Bật / tắt hiển thị đường luồng hút khí động học dưới các trục chải (2D & 3D)"
+              title={t('suction.title')}
             >
               <Wind className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Đường hút: {suctionConfig.showUnderSuctionPath !== false ? 'HIỆN' : 'ẨN'}</span>
+              <span>{t('viewport.suctionDuctToggle')}: {suctionConfig.showUnderSuctionPath !== false ? t('fabric.showSupplyRoll') : t('fabric.hideSupplyRoll')}</span>
             </button>
 
             <div className="relative">
@@ -2615,10 +2614,10 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                     ? 'bg-sky-950/90 border-sky-500 text-sky-300'
                     : 'bg-slate-900 border-slate-700 text-slate-300 hover:text-white'
                 }`}
-                title="Tùy chỉnh vị trí/độ rộng luồng hút dưới trục (mm) và tỉ lệ rơi xơ (%)"
+                title={t('viewport.suctionQuickTitle')}
               >
                 <Sliders className="w-3.5 h-3.5 text-sky-400" />
-                <span className="hidden sm:inline">Rộng: {suctionConfig.underSuctionOffsetMm ?? 45}mm</span>
+                <span className="hidden sm:inline">{t('cad.width')}: {suctionConfig.underSuctionOffsetMm ?? 45}mm</span>
                 <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
 
@@ -2627,7 +2626,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 <div className="absolute top-full mt-2 right-0 sm:left-0 z-50 w-72 p-3 bg-slate-950/95 backdrop-blur-md border border-slate-700 rounded-xl shadow-2xl space-y-3 text-xs text-slate-200">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-1.5 font-semibold text-sky-300">
                     <span className="flex items-center gap-1.5">
-                      <Wind className="w-4 h-4 text-emerald-400" /> Tùy Chỉnh Luồng Hút Đáy
+                      <Wind className="w-4 h-4 text-emerald-400" /> {t('viewport.suctionQuickTitle')}
                     </span>
                     <button
                       onClick={() => setShowSuctionQuickControls(false)}
@@ -2640,7 +2639,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   {/* Độ rộng / Khoảng cách võng dưới trục chải */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-400">Độ rộng luồng hút dưới trục:</span>
+                      <span className="text-slate-400">{t('viewport.suctionOffsetLabel')}</span>
                       <span className="font-mono font-bold text-sky-300 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
                         {suctionConfig.underSuctionOffsetMm ?? 45} mm
                       </span>
@@ -2684,7 +2683,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   {/* Tỉ lệ xơ rơi qua khe hở do trọng lực */}
                   <div className="space-y-1.5 pt-2 border-t border-slate-800">
                     <div className="flex items-center justify-between text-[11px]">
-                      <span className="text-slate-400">Tỉ lệ xơ rơi qua khe:</span>
+                      <span className="text-slate-400">{t('viewport.fallingFiberRatio')}</span>
                       <span className="font-mono font-bold text-amber-300 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
                         {suctionConfig.fallingFiberRatio ?? 35} %
                       </span>
@@ -2705,9 +2704,9 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                     />
                     <div className="flex gap-1 pt-0.5">
                       {[
-                        { val: 20, label: 'Ít (20%)' },
-                        { val: 40, label: 'Vừa (40%)' },
-                        { val: 65, label: 'Nhiều (65%)' },
+                        { val: 20, label: t('viewport.ratioLow') },
+                        { val: 40, label: t('viewport.ratioMed') },
+                        { val: 65, label: t('viewport.ratioHigh') },
                       ].map((item) => (
                         <button
                           key={item.val}
@@ -2731,7 +2730,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
 
                   {/* Kiểu dáng bông: Mảnh dẹt phẳng vs Tròn */}
                   <div className="pt-2 border-t border-slate-800 space-y-1">
-                    <span className="text-[11px] text-slate-400 block">Dáng hình xơ bông:</span>
+                    <span className="text-[11px] text-slate-400 block">{t('viewport.tuftShapeLabel')}</span>
                     <div className="grid grid-cols-2 gap-1.5">
                       <button
                         onClick={() =>
@@ -2746,7 +2745,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                             : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                         }`}
                       >
-                        Mảnh dẹt phẳng
+                        {t('viewport.shapeFlake')}
                       </button>
                       <button
                         onClick={() =>
@@ -2761,7 +2760,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                             : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-slate-200'
                         }`}
                       >
-                        Hạt tròn
+                        {t('viewport.shapeRound')}
                       </button>
                     </div>
                   </div>
@@ -2770,31 +2769,31 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             </div>
 
             <div className="w-px h-4 bg-slate-700 mx-0.5" />
-            <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 bg-emerald-950/80 border border-emerald-500/50 rounded-lg text-[11px] text-emerald-300 font-medium select-none shadow-sm" title="Vải vụn dệt được xé tơi thành xơ bông và hút vào ống khí động, không còn cuộn vải gập lại">
+            <div className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 bg-emerald-950/80 border border-emerald-500/50 rounded-lg text-[11px] text-emerald-300 font-medium select-none shadow-sm" title={t('viewport.flowProcessBanner')}>
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              <span>Nạp vải ➔ Xé thành xơ ➔ Ống hút 100% xơ bông</span>
+              <span>{t('viewport.flowProcessBanner')}</span>
             </div>
             <button
               onClick={toggleHUD}
               className="flex items-center gap-1 px-2 py-1.5 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-slate-200 transition-colors text-[11px]"
-              title="Ẩn bớt bảng thông số để nhìn 3D rõ nét (Phím H)"
+              title={t('viewport.hideHudTip')}
             >
               <EyeOff className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Ẩn thông số [H]</span>
+              <span className="hidden sm:inline">{t('viewport.hideHudBtn')}</span>
             </button>
           </div>
 
           {/* Overlay chú thích thao tác 3D */}
           <div className="absolute bottom-4 left-4 z-10 px-3 py-1.5 bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-lg text-[11px] text-slate-400 pointer-events-none flex items-center gap-3">
-            <span>Xoay góc: <strong className="text-slate-200">Chuột trái</strong></span>
+            <span>{t('viewport.helpRotate')}</span>
             <span>·</span>
-            <span>Di chuyển: <strong className="text-slate-200">Chuột phải / giữa</strong></span>
+            <span>{t('viewport.helpPan')}</span>
             <span>·</span>
-            <span>Phóng to: <strong className="text-slate-200">Cuộn chuột</strong></span>
+            <span>{t('viewport.helpZoom')}</span>
             <span>·</span>
-            <span>Kéo trục: <strong className="text-sky-300">Click & Kéo</strong></span>
+            <span>{t('viewport.helpDrag')}</span>
             <span>·</span>
-            <span>Ẩn HUD: <strong className="text-amber-300">Phím H</strong></span>
+            <span>{t('viewport.helpHideHud')}</span>
           </div>
 
           {/* Active Selected Component Info Badge in 3D (Draggable, Minimizable, Closeable) */}
@@ -2804,6 +2803,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
             const v = getLinearVelocity(comp.diameter, comp.rpm);
             const pitch = comp.toothPitchMm || (comp.type === 'main_drum' ? 3.2 : 2.8);
             const angle = comp.toothAngleDeg || (comp.type === 'main_drum' ? 70 : 65);
+            const localizedName = getLocalizedComponentName(comp, language);
 
             return (
               <div
@@ -2819,11 +2819,11 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                 <div
                   onMouseDown={handleBadgeHeaderMouseDown}
                   className="flex items-center justify-between gap-2 px-3 py-2 bg-slate-800/90 hover:bg-slate-800 border-b border-slate-700/80 cursor-grab active:cursor-grabbing transition-colors"
-                  title="Nhấn giữ và kéo chuột để di chuyển bảng thông số đến bất kỳ vị trí nào (không lo che HUD)"
+                  title={t('viewport.badgeDragTip')}
                 >
                   <div className="flex items-center gap-1.5 min-w-0">
                     <GripHorizontal className="w-4 h-4 text-sky-400 shrink-0" />
-                    <span className="font-bold text-sky-200 truncate">{comp.name}</span>
+                    <span className="font-bold text-sky-200 truncate">{localizedName}</span>
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
                     <span className="font-mono text-[10px] bg-slate-950 text-sky-400 px-1.5 py-0.5 rounded border border-slate-700">
@@ -2836,7 +2836,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                         setIsBadgeMinimized(!isBadgeMinimized);
                       }}
                       className="p-1 hover:bg-slate-700 text-slate-300 hover:text-white rounded cursor-pointer transition-colors"
-                      title={isBadgeMinimized ? 'Mở rộng chi tiết' : 'Thu gọn bảng'}
+                      title={isBadgeMinimized ? t('common.edit') : t('common.close')}
                     >
                       {isBadgeMinimized ? <Maximize2 className="w-3.5 h-3.5" /> : <Minimize2 className="w-3.5 h-3.5" />}
                     </button>
@@ -2847,7 +2847,7 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                         onSelectComponent(null);
                       }}
                       className="p-1 hover:bg-rose-500/30 text-slate-400 hover:text-rose-300 rounded cursor-pointer transition-colors"
-                      title="Đóng bảng thông số này [Esc]"
+                      title={t('viewport.badgeClose')}
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -2859,22 +2859,22 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                   <div className="p-3 space-y-2.5">
                     <div className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[11px] text-slate-300">
                       <div>
-                        Vị trí: <span className="font-mono text-slate-100">X:{comp.x} Y:{comp.y}</span>
+                        {t('viewport.badgePosition')} <span className="font-mono text-slate-100">X:{comp.x} Y:{comp.y}</span>
                       </div>
                       <div>
-                        Tần số: <span className="font-mono text-emerald-400 font-bold">{rpmToHz(comp.rpm)} Hz</span>
+                        {t('viewport.badgeFrequency')} <span className="font-mono text-emerald-400 font-bold">{rpmToHz(comp.rpm)} Hz</span>
                       </div>
                       <div>
-                        Tốc độ: <span className="font-mono text-slate-100">{comp.rpm} RPM</span>
+                        {t('viewport.badgeSpeed')} <span className="font-mono text-slate-100">{comp.rpm} RPM</span>
                       </div>
                       <div>
-                        Vận tốc: <span className="font-mono text-emerald-400">{v} m/p</span>
+                        {t('viewport.badgeVelocity')} <span className="font-mono text-emerald-400">{v} m/p</span>
                       </div>
                       <div>
-                        Chiều quay: <span className="font-semibold text-amber-300">{comp.rotationDir}</span>
+                        {t('viewport.badgeDirection')} <span className="font-semibold text-amber-300">{comp.rotationDir}</span>
                       </div>
                       <div>
-                        Đồ kim: <span className="font-mono text-sky-300">p{pitch}mm · {angle}°</span>
+                        {t('viewport.badgeClothing')} <span className="font-mono text-sky-300">p{pitch}mm · {angle}°</span>
                       </div>
                     </div>
 
@@ -2884,19 +2884,19 @@ export const Viewport3D: React.FC<Viewport3DProps> = ({
                         className="w-full py-1.5 px-2 bg-slate-800 hover:bg-slate-750 text-sky-300 rounded-lg text-[10px] font-medium border border-slate-700/80 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
                         <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                        <span>Xem vi mô bề mặt kim & profile răng</span>
+                        <span>{t('viewport.viewCardClothing')}</span>
                       </button>
                     )}
 
                     <div className="flex items-center justify-between pt-1 border-t border-slate-800 text-[10px] text-slate-400">
                       <span className="flex items-center gap-1 text-slate-400">
-                        <Move className="w-3 h-3 text-sky-400" /> Kéo thanh tiêu đề để dời
+                        <Move className="w-3 h-3 text-sky-400" /> {t('viewport.badgeDragTip')}
                       </span>
                       <button
                         onClick={() => onSelectComponent(null)}
                         className="text-slate-400 hover:text-slate-200 underline cursor-pointer"
                       >
-                        Đóng [Esc]
+                        {t('viewport.badgeClose')}
                       </button>
                     </div>
                   </div>

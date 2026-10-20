@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { MachineComponent, SuctionSystemConfig, MaterialFeedConfig, ClearanceItem, TechnicalConflict } from '../types/machine';
+import { useLanguage } from '../i18n';
 import { X, Copy, Check, Download, FileText, CheckCircle2 } from 'lucide-react';
+
+import { getLocalizedName, getLocalizedDiagnosticAlert } from '../utils/localization';
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -21,6 +24,7 @@ export const ExportModal: React.FC<ExportModalProps> = ({
   clearances,
   conflicts,
 }) => {
+  const { t, language } = useLanguage();
   const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState<'json' | 'report'>('report');
 
@@ -33,7 +37,9 @@ export const ExportModal: React.FC<ExportModalProps> = ({
       material: materialConfig.materialName,
       feedRateKgH: materialConfig.feedRateKgPerHour,
       suctionVelocityMs: suctionConfig.airVelocity,
-      safetyStatus: conflicts.length === 0 ? 'AN TOÀN' : `${conflicts.length} VẤN ĐỀ CẦN LƯU Ý`,
+      safetyStatus: conflicts.length === 0
+        ? (language === 'en' ? 'SAFE' : language === 'ko' ? '안전' : 'AN TOÀN')
+        : (language === 'en' ? `${conflicts.length} ISSUES FLAGGED` : language === 'ko' ? `${conflicts.length}개 주의 항목` : `${conflicts.length} VẤN ĐỀ CẦN LƯU Ý`),
     },
     components,
     suctionConfig,
@@ -43,8 +49,106 @@ export const ExportModal: React.FC<ExportModalProps> = ({
 
   const jsonString = JSON.stringify(exportData, null, 2);
 
-  // Báo cáo kỹ thuật bằng văn bản tiếng Việt
-  const technicalReport = `=====================================================
+  const getTechnicalReport = () => {
+    if (language === 'en') {
+      return `=====================================================
+INDUSTRIAL TEXTILE RECYCLING MACHINE SPECIFICATION REPORT
+Export Time: ${new Date().toLocaleString('en-US')}
+=====================================================
+
+1. OPERATIONAL & MATERIAL PARAMETERS:
+- Material Type: ${materialConfig.materialName}
+- Feed Direction: ${materialConfig.feedDirection === 'left_to_right' ? 'Left to Right' : 'Right to Left'}
+- Feed Speed: ${materialConfig.feedSpeedMPerMin} m/min (Throughput: ${materialConfig.feedRateKgPerHour} kg/h)
+- Nominal Tension: ${materialConfig.nominalTensionN} N
+- Suction System: ${suctionConfig.active ? 'ACTIVE' : 'OFF'} | Air Velocity: ${suctionConfig.airVelocity} m/s | Flow: ${suctionConfig.airflowRate} m3/h
+
+2. MACHINE COMPONENTS & ROLLERS (${components.length} items):
+${components
+  .map(
+    (c, i) =>
+      ` ${i + 1}. ${getLocalizedName(c.name, 'en')} [${c.type}]
+    - Center Coords: X=${c.x} mm, Y=${c.y} mm
+    - Diameter Ø: ${c.diameter} mm | Length: ${c.length} mm
+    - Rotation: ${c.rotationDir} | Speed: ${c.rpm} RPM
+    - Surface: ${c.surfaceType}`
+  )
+  .join('\n')}
+
+3. CLEARANCE DISTANCE MATRIX (mm):
+${clearances
+  .map(
+    (cl) =>
+      `- ${getLocalizedName(cl.nameA, 'en')} ↔ ${getLocalizedName(cl.nameB, 'en')}: ${cl.gapMm} mm [Target: ${cl.recommendedGapMin}-${cl.recommendedGapMax}mm] -> ${
+        cl.gapMm < 0 ? 'COLLISION DANGER' : cl.status === 'optimal' ? 'OPTIMAL' : 'ADJUST'
+      }`
+  )
+  .join('\n')}
+
+4. DIAGNOSTIC SAFETY AUDIT:
+${
+  conflicts.length === 0
+    ? '✔ ZERO TECHNICAL CONFLICTS DETECTED. Machine operates within safe engineering standards.'
+    : conflicts
+        .map((cf, i) => {
+          const loc = getLocalizedDiagnosticAlert(cf, 'en');
+          return `[${loc.level.toUpperCase()}] ${i + 1}. ${loc.title}\n   Details: ${loc.description}\n   Remedy: ${loc.recommendation}`;
+        })
+        .join('\n\n')
+}
+=====================================================`;
+    }
+
+    if (language === 'ko') {
+      return `=====================================================
+산업용 섬유 개섬기 기술 사양 및 안전 점검 보고서
+출력 일시: ${new Date().toLocaleString('ko-KR')}
+=====================================================
+
+1. 운전 조건 및 원단 사양:
+- 투입 원단 종류: ${materialConfig.materialName}
+- 공급 방향: ${materialConfig.feedDirection === 'left_to_right' ? '좌측 -> 우측' : '우측 -> 좌측'}
+- 공급 속도: ${materialConfig.feedSpeedMPerMin} m/min (시간당 생산량: ${materialConfig.feedRateKgPerHour} kg/h)
+- 공칭 장력: ${materialConfig.nominalTensionN} N
+- 집진 흡입 시스템: ${suctionConfig.active ? '가동 중' : '정지'} | 풍속: ${suctionConfig.airVelocity} m/s | 유량: ${suctionConfig.airflowRate} m3/h
+
+2. 롤러 및 구성 부품 목록 (${components.length}개):
+${components
+  .map(
+    (c, i) =>
+      ` ${i + 1}. ${getLocalizedName(c.name, 'ko')} [${c.type}]
+    - 중심 좌표: X=${c.x} mm, Y=${c.y} mm
+    - 롤러 직경 Ø: ${c.diameter} mm | 면장: ${c.length} mm
+    - 회전 방향: ${c.rotationDir} | 회전수: ${c.rpm} RPM
+    - 표면 형태: ${c.surfaceType}`
+  )
+  .join('\n')}
+
+3. 롤러 간극 실측 매트릭스 (CLEARANCE MATRIX):
+${clearances
+  .map(
+    (cl) =>
+      `- ${getLocalizedName(cl.nameA, 'ko')} ↔ ${getLocalizedName(cl.nameB, 'ko')}: ${cl.gapMm} mm [권장치: ${cl.recommendedGapMin}-${cl.recommendedGapMax}mm] -> ${
+        cl.gapMm < 0 ? '충돌 위험' : cl.status === 'optimal' ? '적합' : '간극 조정 필요'
+      }`
+  )
+  .join('\n')}
+
+4. 기술 진단 및 안전 점검 결과:
+${
+  conflicts.length === 0
+    ? '✔ 기술적 충돌 및 간섭 없음. 안전 규격 충족.'
+    : conflicts
+        .map((cf, i) => {
+          const loc = getLocalizedDiagnosticAlert(cf, 'ko');
+          return `[${loc.level.toUpperCase()}] ${i + 1}. ${loc.title}\n   세부사항: ${loc.description}\n   조치사항: ${loc.recommendation}`;
+        })
+        .join('\n\n')
+}
+=====================================================`;
+    }
+
+    return `=====================================================
 BÁO CÁO KỸ THUẬT CẤU HÌNH & AN TOÀN MÁY XÉ VẢI CÔNG NGHIỆP
 Thời gian xuất: ${new Date().toLocaleString('vi-VN')}
 =====================================================
@@ -92,7 +196,9 @@ ${
         .join('\n\n')
 }
 =====================================================`;
+  };
 
+  const technicalReport = getTechnicalReport();
   const textToCopy = activeTab === 'json' ? jsonString : technicalReport;
 
   const handleCopy = () => {
@@ -106,7 +212,7 @@ ${
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = activeTab === 'json' ? 'may_xe_vai_config.json' : 'bao_cao_ky_thuat_may_xe_vai.txt';
+    a.download = activeTab === 'json' ? 'textile_machine_config.json' : 'textile_machine_technical_report.txt';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -118,7 +224,7 @@ ${
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900/50">
           <div className="flex items-center gap-2">
             <FileText className="w-5 h-5 text-sky-400" />
-            <h2 className="text-base font-semibold text-slate-100">Xuất Thông Số & Báo Cáo Kỹ Thuật Máy</h2>
+            <h2 className="text-base font-semibold text-slate-100">{t('modal.export.title')}</h2>
           </div>
           <button onClick={onClose} className="p-1 text-slate-400 hover:text-slate-200 rounded">
             <X className="w-5 h-5" />
@@ -133,7 +239,7 @@ ${
               activeTab === 'report' ? 'border-sky-500 text-sky-300' : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            Báo cáo kỹ thuật chi tiết (.txt)
+            {t('modal.export.pdf')} (.txt)
           </button>
           <button
             onClick={() => setActiveTab('json')}
@@ -141,7 +247,7 @@ ${
               activeTab === 'json' ? 'border-sky-500 text-sky-300' : 'border-transparent text-slate-400 hover:text-slate-200'
             }`}
           >
-            Cấu hình dữ liệu JSON (.json)
+            {t('modal.export.json')} (.json)
           </button>
         </div>
 
@@ -153,7 +259,7 @@ ${
         {/* Modal Footer */}
         <div className="flex items-center justify-between px-6 py-3.5 border-t border-slate-800 bg-slate-900">
           <span className="text-xs text-slate-400">
-            {conflicts.length === 0 ? 'Trạng thái: Hoàn toàn an toàn' : `Cảnh báo: ${conflicts.length} điểm cần xử lý`}
+            {conflicts.length === 0 ? t('diagnostics.noConflicts') : `${conflicts.length} ${t('diagnostics.conflicts')}`}
           </span>
           <div className="flex items-center gap-2.5">
             <button
@@ -161,14 +267,14 @@ ${
               className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-medium border border-slate-700 transition-colors"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copied ? 'Đã sao chép' : 'Sao chép'}</span>
+              <span>{copied ? t('common.copied') : t('common.copy')}</span>
             </button>
             <button
               onClick={handleDownload}
               className="flex items-center gap-1.5 px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Tải tập tin về máy</span>
+              <span>{t('header.exportSpecs')}</span>
             </button>
           </div>
         </div>

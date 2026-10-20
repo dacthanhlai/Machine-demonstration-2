@@ -21,8 +21,8 @@ export function hzToRpm(hz: number, nominalRpm = 800): number {
 }
 
 // Định dạng hiển thị tốc độ theo đơn vị Hz hoặc RPM hoặc song song
-export function formatSpeedDisplay(rpm: number, hz?: number, mode: 'hz' | 'rpm' = 'hz'): string {
-  if (rpm === 0) return 'Tĩnh (0)';
+export function formatSpeedDisplay(rpm: number, hz?: number, mode: 'hz' | 'rpm' = 'hz', lang: string = 'vi'): string {
+  if (rpm === 0) return lang === 'en' ? 'Static (0)' : lang === 'ko' ? '정지 (0)' : 'Tĩnh (0)';
   const calcHz = hz !== undefined ? hz : rpmToHz(rpm);
   if (mode === 'hz') {
     return `${calcHz} Hz (~${rpm} RPM)`;

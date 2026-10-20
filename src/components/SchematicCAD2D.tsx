@@ -2,6 +2,8 @@ import React, { useRef, useState, useEffect } from 'react';
 import { MachineComponent, SuctionSystemConfig, MaterialFeedConfig, ClearanceItem, TensionSegment, FabricRoutingConfig } from '../types/machine';
 import { calculateGap, getLinearVelocity } from '../utils/physicsEngine';
 import { buildContinuousFabricPath, convertPointsToSmoothSvgPath } from '../utils/fabricPath';
+import { useLanguage } from '../i18n';
+import { getLocalizedComponentName, getLocalizedName } from '../utils/localization';
 import { Move, ZoomIn, ZoomOut, Maximize2, AlertTriangle, ShieldCheck, Gauge, Lock, Wind, Plus, Minus, Sliders, Hand, MousePointer } from 'lucide-react';
 
 interface SchematicCAD2DProps {
@@ -37,6 +39,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
   fabricRouting,
   isLocked = false,
 }) => {
+  const { t, language } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Chế độ tương tác 2D CAD: 'pan_view' (Di chuyển tự do không chạm vào trục) vs 'select_drag' (Chọn & Kéo trục)
@@ -255,7 +258,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
               <line x1={origin.x} y1={0} x2={origin.x} y2="100%" stroke="#475569" strokeWidth="1.5" strokeDasharray="4 4" />
               <line x1={0} y1={origin.y} x2="100%" y2={origin.y} stroke="#475569" strokeWidth="1.5" strokeDasharray="4 4" />
               <text x={origin.x + 6} y={origin.y - 6} fill="#94a3b8" fontSize="11" fontFamily="JetBrains Mono">
-                GỐC MÁY (0,0 mm)
+                {t('cad.origin')}
               </text>
             </g>
           );
@@ -399,28 +402,28 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
                       fontWeight="600"
                       fontFamily="JetBrains Mono"
                     >
-                      CUỘN CẤP VẢI (Ø110mm)
+                      {t('fabric.supplyRoll').toUpperCase()} (Ø110mm)
                     </text>
                   </g>
                 );
               })()}
               {/* Mũi tên hướng nạp liệu */}
               <text x={startPt.x - 16} y={startPt.y - 12} fill="#38bdf8" fontSize="10.5" fontWeight="600" fontFamily="JetBrains Mono">
-                HƯỚNG NẠP VẢI ➔
+                {t('fabric.inletFlow')}
               </text>
               {/* Điểm chuyển tiếp tại khe dao và bị trống cuốn xuống */}
               {nipScr && (
                 <g>
                   <circle cx={nipScr.x} cy={nipScr.y} r={4 * zoom} fill="#38bdf8" />
                   <text x={nipScr.x + 8} y={nipScr.y - 8} fill="#7dd3fc" fontSize="9.5" fontWeight="600" fontFamily="JetBrains Mono">
-                    KHE DAO &amp; TRỐNG CUỐN XUỐNG ➔
+                    {t('cad.nipPoint')}
                   </text>
                 </g>
               )}
               {/* Điểm kết thúc vải nguyên tấm: Bị xé tan thành xơ bông */}
               <circle cx={endPt.x} cy={endPt.y} r={6 * zoom} fill="#f59e0b" fillOpacity="0.8" />
               <text x={endPt.x + 10} y={endPt.y + 4} fill="#fbbf24" fontSize="10.5" fontWeight="600" fontFamily="JetBrains Mono">
-                VÙNG XÉ TƠI XƠ BÔNG ➔ BAY VÀO ỐNG HÚT
+                {t('cad.fiberZone')}
               </text>
             </g>
           );
@@ -519,7 +522,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
                           fontFamily="JetBrains Mono"
                           className="pointer-events-none"
                         >
-                          ▼ LUỒNG HÚT ĐÁY VÒNG DƯỚI CÁC TRỤC CHẢI ➔ HỌNG HÚT
+                          {t('cad.underAirflow')}
                         </text>
                       )}
 
@@ -558,7 +561,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
                             textAnchor="middle"
                             fontFamily="JetBrains Mono"
                           >
-                            ⇳ KÉO MỞ RỘNG: {underOffset}mm
+                            {t('cad.dragExpand')} {underOffset}mm
                           </text>
                         </g>
                       )}
@@ -618,7 +621,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
                   />
                   <circle cx={hoodPos.x} cy={hoodPos.y} r={hood.diameter * 0.42 * zoom} fill="#10b981" fillOpacity="0.18" />
                   <text x={hoodPos.x} y={hoodPos.y - 24} fill="#10b981" fontSize="11.5" fontWeight="bold" textAnchor="middle" fontFamily="JetBrains Mono">
-                    ỐNG HÚT XƠ KHÍ ĐỘNG ({suctionConfig.airVelocity} m/s)
+                    {t('cad.exhaustDuct')} ({suctionConfig.airVelocity} m/s)
                   </text>
                 </g>
               );
@@ -681,7 +684,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
                   fontWeight="600"
                   fontFamily="JetBrains Mono"
                 >
-                  {isCollision ? `VA CHẠM: ${c.gapMm}` : `Khe: ${c.gapMm} mm`}
+                  {isCollision ? `${t('cad.collision')} ${c.gapMm}` : `${t('cad.gap')} ${c.gapMm} mm`}
                 </text>
               </g>
             </g>
@@ -826,7 +829,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
                         fontWeight="bold"
                         fontFamily="JetBrains Mono"
                       >
-                        KHE: {gapKnifeDrumMm.toFixed(1)} mm
+                        {t('cad.gap').toUpperCase()}: {gapKnifeDrumMm.toFixed(1)} mm
                       </text>
                     </g>
                   </>
@@ -854,7 +857,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
                     fontWeight="600"
                     fontFamily="Plus Jakarta Sans"
                   >
-                    {comp.name} (Tấm mỏng)
+                    {getLocalizedComponentName(comp, language)}
                   </text>
                 </g>
               </g>
@@ -882,7 +885,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
                 />
                 <circle cx={0} cy={0} r={radiusScreen * 0.4} fill="#10b981" fillOpacity="0.4" />
                 <text x="0" y={radiusScreen + 14} textAnchor="middle" fill="#34d399" fontSize="10" fontWeight="600">
-                  {comp.name}
+                  {getLocalizedComponentName(comp, language)}
                 </text>
               </g>
             );
@@ -1055,7 +1058,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
               {/* Nhãn thông số bên dưới trục */}
               <g transform={`translate(0, ${radiusScreen + 15})`} className="pointer-events-none">
                 <text x="0" y="0" textAnchor="middle" fill="#f8fafc" fontSize="11" fontWeight="600" fontFamily="Plus Jakarta Sans">
-                  {comp.name}
+                  {getLocalizedComponentName(comp, language)}
                 </text>
                 <text x="0" y="14" textAnchor="middle" fill="#94a3b8" fontSize="10" fontFamily="JetBrains Mono">
                   Ø{comp.diameter}mm · {comp.rpm} RPM ({v} m/m)
@@ -1071,28 +1074,28 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
         <button
           onClick={() => setZoom((z) => Math.min(2.5, z * 1.2))}
           className="p-1.5 hover:bg-slate-800 rounded text-slate-300 hover:text-white transition-colors"
-          title="Phóng to"
+          title={t('cad.zoomIn')}
         >
           <ZoomIn className="w-4 h-4" />
         </button>
         <button
           onClick={() => setZoom((z) => Math.max(0.25, z * 0.8))}
           className="p-1.5 hover:bg-slate-800 rounded text-slate-300 hover:text-white transition-colors"
-          title="Thu nhỏ"
+          title={t('cad.zoomOut')}
         >
           <ZoomOut className="w-4 h-4" />
         </button>
         <button
           onClick={resetView}
           className="p-1.5 hover:bg-slate-800 rounded text-slate-300 hover:text-white transition-colors"
-          title="Vừa vặn khung nhìn"
+          title={t('cad.fitView')}
         >
           <Maximize2 className="w-4 h-4" />
         </button>
         <div className="w-px h-4 bg-slate-700 mx-1" />
-        <span className="font-mono text-[11px] text-slate-400 px-1.5">Tỉ lệ: {Math.round(zoom * 100)}%</span>
+        <span className="font-mono text-[11px] text-slate-400 px-1.5">{t('cad.zoom')} {Math.round(zoom * 100)}%</span>
         <div className="w-px h-4 bg-slate-700 mx-1" />
-        <span className="font-mono text-[11px] text-sky-400 px-1.5">Lưới: {gridSnapMm}mm</span>
+        <span className="font-mono text-[11px] text-sky-400 px-1.5">{t('cad.grid')} {gridSnapMm}mm</span>
 
         <div className="w-px h-4 bg-slate-700 mx-1" />
         <button
@@ -1102,21 +1105,17 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
               ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/60'
               : 'bg-sky-950 text-sky-300 border border-sky-500/60'
           }`}
-          title={
-            cadInteractionMode === 'pan_view'
-              ? 'Đang bật DI CHUYỂN BẢN VẼ: Rê chuột di chuyển tự do không sợ bấm nhầm vào trục. Bấm để đổi sang Chọn & Kéo trục.'
-              : 'Đang bật CHỌN & KÉO TRỤC: Click để chọn và kéo trục. Bấm để chuyển sang Di chuyển bản vẽ tự do.'
-          }
+          title={cadInteractionMode === 'pan_view' ? t('cad.freePan') : t('cad.selectDrag')}
         >
           {cadInteractionMode === 'pan_view' ? (
             <>
               <Hand className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Di chuyển tự do</span>
+              <span>{t('cad.freePan')}</span>
             </>
           ) : (
             <>
               <MousePointer className="w-3.5 h-3.5 text-sky-400" />
-              <span>Chọn & Kéo trục</span>
+              <span>{t('cad.selectDrag')}</span>
             </>
           )}
         </button>
@@ -1136,16 +1135,16 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
               ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/60'
               : 'text-slate-400 hover:text-slate-200'
           }`}
-          title="Bật / tắt hiển thị đường luồng hút khí động học dưới các trục chải (2D & 3D)"
+          title={t('suction.title')}
         >
           <Wind className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Đường hút: {suctionConfig.showUnderSuctionPath !== false ? 'HIỆN' : 'ẨN'}</span>
+          <span>{t('cad.suction')} {suctionConfig.showUnderSuctionPath !== false ? t('fabric.showSupplyRoll') : t('fabric.hideSupplyRoll')}</span>
         </button>
 
         {/* Tăng giảm nhanh độ rộng đường hút */}
         {suctionConfig.showUnderSuctionPath !== false && (
           <div className="flex items-center gap-1 bg-slate-950/80 px-1.5 py-0.5 rounded border border-slate-800 text-[11px]">
-            <span className="text-slate-400">Rộng:</span>
+            <span className="text-slate-400">{t('cad.width')}</span>
             <button
               onClick={() => {
                 const cur = suctionConfig.underSuctionOffsetMm ?? 45;
@@ -1155,7 +1154,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
                 });
               }}
               className="p-0.5 hover:bg-slate-800 rounded text-slate-300 hover:text-white cursor-pointer"
-              title="Thu hẹp đường hút"
+              title="-"
             >
               <Minus className="w-3 h-3" />
             </button>
@@ -1171,7 +1170,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
                 });
               }}
               className="p-0.5 hover:bg-slate-800 rounded text-slate-300 hover:text-white cursor-pointer"
-              title="Mở rộng đường hút dưới trục (kéo rộng ra)"
+              title="+"
             >
               <Plus className="w-3 h-3" />
             </button>
@@ -1181,8 +1180,8 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
         {isLocked && (
           <>
             <div className="w-px h-4 bg-slate-700 mx-1" />
-            <span className="flex items-center gap-1 font-semibold text-[11px] text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-600/70" title="Vị trí toàn bộ dàn máy đang được khóa cố định, chống kéo dịch chuyển nhầm">
-              <Lock className="w-3 h-3 text-amber-400" /> Đã khóa vị trí
+            <span className="flex items-center gap-1 font-semibold text-[11px] text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-600/70" title={t('cad.locked')}>
+              <Lock className="w-3 h-3 text-amber-400" /> {t('cad.locked')}
             </span>
           </>
         )}
@@ -1193,7 +1192,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
         <div className="absolute bottom-4 left-4 right-4 md:right-auto z-10 p-3 bg-slate-900/95 backdrop-blur-md border border-slate-700 rounded-lg shadow-2xl flex flex-wrap items-center gap-4 text-xs">
           <div className="flex items-center gap-2">
             <div className="w-2.5 h-2.5 rounded-full bg-sky-400" />
-            <span className="font-semibold text-slate-100">{selectedComp.name}</span>
+            <span className="font-semibold text-slate-100">{getLocalizedComponentName(selectedComp, language)}</span>
             <span className="text-slate-400 font-mono">X:{selectedComp.x}mm Y:{selectedComp.y}mm</span>
           </div>
 
@@ -1202,14 +1201,14 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
           {/* Cặp cự ly gần nhất */}
           {(() => {
             const nearestClearance = clearances.find((c) => c.idA === selectedComp.id || c.idB === selectedComp.id);
-            if (!nearestClearance) return <span className="text-slate-500">Không có chi tiết lân cận &lt; 120mm</span>;
+            if (!nearestClearance) return <span className="text-slate-500">{t('cad.noClearance')}</span>;
             const otherName = nearestClearance.idA === selectedComp.id ? nearestClearance.nameB : nearestClearance.nameA;
             const otherId = nearestClearance.idA === selectedComp.id ? nearestClearance.idB : nearestClearance.idA;
             const isDanger = nearestClearance.gapMm < 0;
 
             return (
               <div className="flex items-center gap-3">
-                <span className="text-slate-400">Khe hở tới <strong>{otherName}</strong>:</span>
+                <span className="text-slate-400">{t('cad.gapTo')} <strong>{getLocalizedName(otherName, language)}</strong>:</span>
                 <span
                   className={`font-mono font-bold px-2 py-0.5 rounded ${
                     isDanger ? 'bg-rose-950 text-rose-300 border border-rose-700' : 'bg-slate-800 text-sky-300'
@@ -1221,7 +1220,7 @@ export const SchematicCAD2D: React.FC<SchematicCAD2DProps> = ({
                   onClick={() => onOpenGapCalibrator(selectedComp.id, otherId)}
                   className="px-2.5 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded font-medium text-xs transition-colors"
                 >
-                  Chỉnh cự ly chính xác
+                  {t('cad.adjustPrecise')}
                 </button>
               </div>
             );

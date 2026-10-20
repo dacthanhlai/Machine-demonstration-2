@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { RollerType, SavedConfiguration } from '../types/machine';
 import { PRESETS } from '../utils/presets';
+import { useLanguage } from '../i18n';
+import { getLocalizedPreset } from '../utils/localization';
 import {
   Play,
   Pause,
@@ -132,6 +134,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   materialConfig,
   onChangeMaterialConfig,
 }) => {
+  const { t, language } = useLanguage();
   const [showAddMenu, setShowAddMenu] = useState(false);
   const [showModelMenu, setShowModelMenu] = useState(false);
   const [showFabricMenu, setShowFabricMenu] = useState(false);
@@ -178,13 +181,41 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   };
 
   const componentAddOptions: { type: RollerType; label: string; desc: string }[] = [
-    { type: 'main_drum', label: 'Trống Xé Chính (Main Cylinder)', desc: 'Tang trống lớn Ø400-600mm gắn gai xé' },
-    { type: 'feed_roller', label: 'Trục Ép Cấp Liệu (Feed Roller)', desc: 'Cặp trục kẹp khía rãnh Ø140-180mm' },
-    { type: 'worker_roller', label: 'Trục Chải (Worker Roller)', desc: 'Trục vệ tinh chải tơi xơ Ø150mm' },
-    { type: 'stripper_roller', label: 'Trục Bóc (Stripper Roller)', desc: 'Trục bóc xơ từ worker về trống Ø130mm' },
-    { type: 'cutter_knife', label: 'Dao Cắt Tĩnh (Fixed Knife)', desc: 'Thanh dao chém phân tách giẻ vụn' },
-    { type: 'suction_hood', label: 'Miệng Hút Gom Bông (Suction)', desc: 'Họng hút chân không thu gom xơ bay' },
-    { type: 'condenser_drum', label: 'Trống Ngưng Kết (Condenser)', desc: 'Lồng lưới thu gom bông ra ngoài' },
+    {
+      type: 'main_drum',
+      label: t('roller.type.main_cylinder'),
+      desc: language === 'en' ? 'Large Ø400-600mm cylinder with wire teeth' : language === 'ko' ? '침포 와이어가 장착된 Ø400-600mm 메인 드럼' : 'Tang trống lớn Ø400-600mm gắn gai xé',
+    },
+    {
+      type: 'feed_roller',
+      label: t('roller.type.feed_roller'),
+      desc: language === 'en' ? 'Fluted nip roller pair Ø140-180mm' : language === 'ko' ? '홈 가공된 피드 롤러 쌍 Ø140-180mm' : 'Cặp trục kẹp khía rãnh Ø140-180mm',
+    },
+    {
+      type: 'worker_roller',
+      label: t('roller.type.worker_roller'),
+      desc: language === 'en' ? 'Carding satellite roller Ø150mm' : language === 'ko' ? '개섬 위성 워커 롤러 Ø150mm' : 'Trục vệ tinh chải tơi xơ Ø150mm',
+    },
+    {
+      type: 'stripper_roller',
+      label: t('roller.type.stripper_roller'),
+      desc: language === 'en' ? 'Stripper roller returning fibers to drum Ø130mm' : language === 'ko' ? '워커에서 드럼으로 섬유를 전달하는 스트리퍼 Ø130mm' : 'Trục bóc xơ từ worker về trống Ø130mm',
+    },
+    {
+      type: 'cutter_knife',
+      label: t('roller.type.cutter_fixed'),
+      desc: language === 'en' ? 'Bed knife bar separating textile scrap' : language === 'ko' ? '원단 조각을 분리하는 고정 베드 나이프' : 'Thanh dao chém phân tách giẻ vụn',
+    },
+    {
+      type: 'suction_hood',
+      label: t('roller.type.suction_hood'),
+      desc: language === 'en' ? 'Vacuum suction hood collecting airborne lint' : language === 'ko' ? '부유 섬유를 포집하는 진공 흡입 후드' : 'Họng hút chân không thu gom xơ bay',
+    },
+    {
+      type: 'condenser_drum',
+      label: t('roller.type.condenser_drum'),
+      desc: language === 'en' ? 'Perforated mesh cage condenser' : language === 'ko' ? '타공 메쉬 케이지 콘덴서 드럼' : 'Lồng lưới thu gom bông ra ngoài',
+    },
   ];
 
   return (
@@ -200,10 +231,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               ? 'bg-amber-600 hover:bg-amber-500 text-white'
               : 'bg-emerald-600 hover:bg-emerald-500 text-white'
           }`}
-          title={isRunning ? 'Tạm dừng mô phỏng động học' : 'Bắt đầu mô phỏng quay trục & dòng chảy vải'}
+          title={isRunning ? t('toolbar.pause') : t('toolbar.play')}
         >
           {isRunning ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-          <span>{isRunning ? 'Tạm dừng' : 'Chạy'}</span>
+          <span>{isRunning ? t('toolbar.pause') : t('toolbar.play')}</span>
         </button>
 
         {/* Tốc độ giả lập (hỗ trợ chuyển động siêu chậm 0.1x, 0.2x để quan sát kỹ xơ bông) */}
@@ -216,7 +247,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               className={`px-2 py-1 rounded transition-colors cursor-pointer ${
                 simSpeedMultiplier === s ? 'bg-slate-800 text-sky-400 font-bold' : 'text-slate-400 hover:text-slate-200'
               }`}
-              title={`Chạy mô phỏng ở tốc độ ${s}x`}
+              title={language === 'en' ? `Run simulation at ${s}x speed` : language === 'ko' ? `${s}x 속도로 시뮬레이션 실행` : `Chạy mô phỏng ở tốc độ ${s}x`}
             >
               {s}x
             </button>
@@ -229,7 +260,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             type="button"
             onClick={onToggleSpeedUnitMode}
             className="hidden sm:flex items-center gap-1 px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-slate-300 rounded-lg border border-slate-800 text-[11px] font-mono transition-colors cursor-pointer"
-            title="Chuyển đổi hiển thị tốc độ theo tần số biến tần (Hz) hoặc vòng/phút (RPM)"
+            title={language === 'en' ? 'Toggle speed display unit between Frequency (Hz) and RPM' : language === 'ko' ? '주파수(Hz)와 분당회전수(RPM) 속도 단위 전환' : 'Chuyển đổi hiển thị tốc độ theo tần số biến tần (Hz) hoặc vòng/phút (RPM)'}
           >
             <Zap className="w-3 h-3 text-amber-400" />
             <span><strong className="text-emerald-400 uppercase">{speedUnitMode}</strong></span>
@@ -249,7 +280,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 ? 'text-slate-200 hover:bg-slate-800 hover:text-white cursor-pointer'
                 : 'text-slate-600 cursor-not-allowed opacity-50'
             }`}
-            title="Hoàn tác thao tác trước (Phím tắt: Ctrl+Z)"
+            title={t('toolbar.undo')}
           >
             <Undo2 className="w-3.5 h-3.5" />
             <span className="hidden xl:inline text-[11px]">Undo</span>
@@ -264,7 +295,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 ? 'text-slate-200 hover:bg-slate-800 hover:text-white cursor-pointer'
                 : 'text-slate-600 cursor-not-allowed opacity-50'
             }`}
-            title="Làm lại thao tác vừa hoàn tác (Phím tắt: Ctrl+Y hoặc Ctrl+Shift+Z)"
+            title={t('toolbar.redo')}
           >
             <Redo2 className="w-3.5 h-3.5" />
             <span className="hidden xl:inline text-[11px]">Redo</span>
@@ -281,21 +312,17 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 ? 'bg-amber-950/90 border-amber-500 text-amber-300 shadow-sm shadow-amber-950 ring-1 ring-amber-500/50'
                 : 'bg-slate-950 hover:bg-slate-800 text-slate-300 border-slate-800 hover:border-slate-700'
             }`}
-            title={
-              isLocked
-                ? 'Vị trí dàn máy đang BỊ KHÓA cố định. Click để MỞ KHÓA cho phép dịch chuyển'
-                : 'Click để KHÓA CỐ ĐỊNH vị trí các trục trên bản vẽ và 3D, tránh vô tình rê chuột làm xê dịch'
-            }
+            title={isLocked ? t('toolbar.unlock') : t('toolbar.lock')}
           >
             {isLocked ? (
               <>
                 <Lock className="w-3.5 h-3.5 text-amber-400" />
-                <span>ĐÃ KHÓA</span>
+                <span>{t('toolbar.lock')}</span>
               </>
             ) : (
               <>
                 <Unlock className="w-3.5 h-3.5 text-slate-400" />
-                <span className="hidden md:inline">Khóa vị trí</span>
+                <span className="hidden md:inline">{t('toolbar.unlock')}</span>
               </>
             )}
           </button>
@@ -313,7 +340,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             }`}
           >
             <Box className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">3D</span>
+            <span className="hidden sm:inline">{t('toolbar.view3D')}</span>
           </button>
           <button
             type="button"
@@ -323,7 +350,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             }`}
           >
             <Compass className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">2D CAD</span>
+            <span className="hidden sm:inline">{t('toolbar.view2D')}</span>
           </button>
           <button
             type="button"
@@ -333,7 +360,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             }`}
           >
             <Columns className="w-3.5 h-3.5" />
-            <span className="hidden md:inline">Chia đôi</span>
+            <span className="hidden md:inline">{t('toolbar.viewSplit')}</span>
           </button>
         </div>
 
@@ -351,10 +378,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 ? 'bg-indigo-600 text-white border-indigo-400 shadow-md ring-2 ring-indigo-400/40'
                 : 'bg-indigo-950/80 hover:bg-indigo-900 text-indigo-300 border-indigo-700/80'
             }`}
-            title="Bộ điều khiển khổ vải (mm), độ dày và thông số dải vải cấp vào"
+            title={t('fabric.menuTitle')}
           >
             <Layers className="w-3.5 h-3.5 text-indigo-400" />
-            <span>Khổ vải: <strong className="font-mono text-white">{fabricRouting?.clothWidthMm || 850} mm</strong></span>
+            <span>{t('fabric.clothWidth')}: <strong className="font-mono text-white">{fabricRouting?.clothWidthMm || 850} mm</strong></span>
             <ChevronDown className="w-3 h-3 text-indigo-300" />
           </button>
 
@@ -364,7 +391,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               <div className="flex items-center justify-between pb-2 border-b border-slate-800 font-semibold text-indigo-300">
                 <span className="flex items-center gap-1.5">
                   <Layers className="w-4 h-4 text-indigo-400" />
-                  <span>ĐIỀU KHIỂN KHỔ VẢI & NGUYÊN LIỆU</span>
+                  <span>{t('fabric.menuTitle')}</span>
                 </span>
                 <button
                   type="button"
@@ -378,7 +405,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               {/* Khổ rộng dải vải mm */}
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-slate-400">Bề rộng khổ vải cấp vào:</span>
+                  <span className="text-slate-400">{t('toolbar.feedWidthLabel')}</span>
                   <span className="font-mono font-bold text-indigo-300 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
                     {fabricRouting?.clothWidthMm || 850} mm
                   </span>
@@ -424,14 +451,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                   ))}
                 </div>
                 <p className="text-[10px] text-slate-400 italic">
-                  * Khổ vải hỗ trợ tối đa 2000mm (chuẩn dây chuyền xé vải công nghiệp lớn). Tang trống tự động mở rộng theo khổ vải.
+                  {t('toolbar.maxFabricNotice')}
                 </p>
               </div>
 
               {/* Độ dày vải & Số lớp */}
               <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800/80">
                 <div className="space-y-1">
-                  <span className="text-[11px] text-slate-400 block">Số lớp vải xếp:</span>
+                  <span className="text-[11px] text-slate-400 block">{t('toolbar.fabricLayers')}</span>
                   <select
                     value={materialConfig?.fabricLayers || 2}
                     onChange={(e) => {
@@ -442,15 +469,15 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                     className="w-full bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 font-mono text-xs outline-none focus:border-indigo-500"
                   >
                     {[1, 2, 3, 4, 6, 8].map((l) => (
-                      <option key={l} value={l} className="bg-slate-900">{l} lớp ({l * 0.9}mm)</option>
+                      <option key={l} value={l} className="bg-slate-900">{l} {t('toolbar.layersUnit')} ({l * 0.9}mm)</option>
                     ))}
                   </select>
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[11px] text-slate-400 block">Tốc độ cấp:</span>
+                  <span className="text-[11px] text-slate-400 block">{t('fabric.feedSpeed')}:</span>
                   <div className="flex items-center gap-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 font-mono text-xs">
                     <span>{materialConfig?.feedSpeedMPerMin || 12}</span>
-                    <span className="text-[10px] text-slate-500">m/phút</span>
+                    <span className="text-[10px] text-slate-500">{t('common.mPerMin')}</span>
                   </div>
                 </div>
               </div>
@@ -458,14 +485,14 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               {/* Màu sắc dải vải */}
               {fabricRouting && onChangeFabricRouting && (
                 <div className="space-y-1.5 pt-1 border-t border-slate-800/80">
-                  <span className="text-[11px] text-slate-400 block">Màu sắc dải vải 3D:</span>
+                  <span className="text-[11px] text-slate-400 block">{t('toolbar.clothColorLabel')}</span>
                   <div className="flex items-center gap-1.5">
                     {[
-                      { hex: '#2563eb', label: 'Xanh Denim' },
-                      { hex: '#f8fafc', label: 'Trắng Cotton' },
-                      { hex: '#64748b', label: 'Xám Tẩy' },
-                      { hex: '#dc2626', label: 'Đỏ' },
-                      { hex: '#16a34a', label: 'Xanh Lá' },
+                      { hex: '#2563eb', label: language === 'en' ? 'Denim Blue' : language === 'ko' ? '데님 블루' : 'Xanh Denim' },
+                      { hex: '#f8fafc', label: language === 'en' ? 'Cotton White' : language === 'ko' ? '코튼 화이트' : 'Trắng Cotton' },
+                      { hex: '#64748b', label: language === 'en' ? 'Bleached Grey' : language === 'ko' ? '탈색 그레이' : 'Xám Tẩy' },
+                      { hex: '#dc2626', label: language === 'en' ? 'Red Fabric' : language === 'ko' ? '레드 원단' : 'Đỏ' },
+                      { hex: '#16a34a', label: language === 'en' ? 'Green Fabric' : language === 'ko' ? '그린 원단' : 'Xanh Lá' },
                     ].map((col) => (
                       <button
                         key={col.hex}
@@ -491,7 +518,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                   <div className="flex items-center justify-between text-[11px] text-slate-300 bg-slate-950/70 p-2 rounded-lg border border-slate-800">
                     <span className="flex items-center gap-1.5 font-medium">
                       <Layers className="w-4 h-4 text-indigo-400" />
-                      <span>Cây cuộn vải cấp liệu:</span>
+                      <span>{t('fabric.supplyRoll')}:</span>
                     </span>
                     <button
                       type="button"
@@ -507,7 +534,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                           : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-slate-200'
                       }`}
                     >
-                      {fabricRouting.showSupplyRoll !== false ? 'HIỆN' : 'ẨN'}
+                      {fabricRouting.showSupplyRoll !== false ? t('fabric.showSupplyRoll') : t('fabric.hideSupplyRoll')}
                     </button>
                   </div>
                 </div>
@@ -519,17 +546,17 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         {/* BƯỚC LƯỚI SNAP CAD (Grid snap dropdown) */}
         <div className="hidden lg:flex items-center bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-slate-300 gap-1.5">
           <Grid className="w-3.5 h-3.5 text-sky-400 shrink-0" />
-          <span className="text-[11px] text-slate-400 shrink-0">Lưới:</span>
+          <span className="text-[11px] text-slate-400 shrink-0">{t('toolbar.gridSnap')}:</span>
           <select
             value={gridSnapMm}
             onChange={(e) => onChangeGridSnap(Number(e.target.value))}
             className="bg-transparent text-xs font-mono text-sky-300 font-bold outline-none cursor-pointer"
-            title="Độ bắt dính bước lưới khi rê kéo chi tiết trên CAD (Snap to grid)"
+            title={t('toolbar.gridSnap')}
           >
-            <option value={10} className="bg-slate-900 text-slate-100">10 mm (Chuẩn)</option>
+            <option value={10} className="bg-slate-900 text-slate-100">10 mm ({t('diagnostics.severity.normal', 'Chuẩn')})</option>
             <option value={5} className="bg-slate-900 text-slate-100">5 mm</option>
-            <option value={1} className="bg-slate-900 text-slate-100">1 mm (Mịn)</option>
-            <option value={0} className="bg-slate-900 text-slate-100">Tắt (Tự do)</option>
+            <option value={1} className="bg-slate-900 text-slate-100">1 mm</option>
+            <option value={0} className="bg-slate-900 text-slate-100">{t('common.reset', 'Tắt')}</option>
           </select>
         </div>
 
@@ -543,10 +570,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 ? 'bg-slate-950 hover:bg-slate-800 text-slate-300 border-slate-800'
                 : 'bg-amber-950/80 text-amber-300 border-amber-600/80 font-bold shadow-md'
             }`}
-            title="Ẩn / Hiện các bảng thông số nổi (Phím tắt: H)"
+            title={t('toolbar.hudToggle')}
           >
             {showHUD ? <EyeOff className="w-3.5 h-3.5 text-slate-400" /> : <Eye className="w-3.5 h-3.5 text-amber-400" />}
-            <span className="hidden xl:inline">{showHUD ? 'HUD [H]' : 'Hiện [H]'}</span>
+            <span className="hidden xl:inline">{showHUD ? t('toolbar.hudOn') : t('toolbar.hudOff')}</span>
           </button>
         )}
 
@@ -556,10 +583,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             type="button"
             onClick={onOpenCardClothingModal}
             className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 bg-sky-950/70 hover:bg-sky-900 text-sky-300 rounded-lg text-xs font-semibold border border-sky-800/80 transition-colors cursor-pointer"
-            title="Xem chi tiết vi mô bề mặt kim, dải quấn xoắn và góc nghiêng răng cưa"
+            title={t('toolbar.cardClothing')}
           >
             <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-            <span>Bề mặt kim</span>
+            <span>{t('toolbar.cardClothing')}</span>
           </button>
         )}
       </div>
@@ -572,10 +599,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
             type="button"
             onClick={onCreateNewModel}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold shadow-sm transition-colors cursor-pointer"
-            title="Tạo một dàn máy mới để bắt đầu thiết kế theo ý bạn"
+            title={t('toolbar.newModel')}
           >
             <PlusCircle className="w-3.5 h-3.5" />
-            <span>+ Tạo mẫu mới</span>
+            <span>+ {t('toolbar.newModel')}</span>
           </button>
         )}
 
@@ -589,10 +616,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 ? 'bg-emerald-600 hover:bg-emerald-500 text-white ring-2 ring-emerald-300/80 shadow-emerald-950'
                 : 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border border-emerald-800/80'
             }`}
-            title="Lưu ngay dàn máy hiện tại (Phím tắt: Ctrl+S)"
+            title={t('toolbar.quickSave')}
           >
             <Save className="w-3.5 h-3.5" />
-            <span>{isDirty ? 'Lưu mẫu *' : 'Đã lưu'}</span>
+            <span>{isDirty ? `${t('toolbar.quickSave')} *` : t('common.save')}</span>
           </button>
         )}
 
@@ -622,33 +649,36 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 }
               }}
               className="bg-transparent text-slate-100 font-semibold text-xs outline-none cursor-pointer max-w-[170px] sm:max-w-[210px] truncate"
-              title="Chọn mẫu dàn máy để xem hoặc tiếp tục chỉnh sửa"
+              title={language === 'en' ? 'Select machine model to view or edit' : language === 'ko' ? '기계 모델 선택 및 편집' : 'Chọn mẫu dàn máy để xem hoặc tiếp tục chỉnh sửa'}
             >
-              <optgroup label="⭐ Dàn máy tự lưu của bạn">
+              <optgroup label={t('toolbar.customModels')}>
                 {savedConfigs.map((cfg) => (
                   <option key={cfg.id} value={cfg.id} className="bg-slate-900 text-slate-100 py-1">
-                    {cfg.name} ({cfg.components.length} trục)
+                    {cfg.name} ({cfg.components.length} {t('sidebar.tab.inspector')})
                   </option>
                 ))}
                 {savedConfigs.length === 0 && (
                   <option value="__empty__" disabled className="bg-slate-900 text-slate-500">
-                    (Chưa có mẫu tự lưu nào)
+                    {t('toolbar.emptyCustom')}
                   </option>
                 )}
               </optgroup>
-              <optgroup label="🏭 Mẫu công nghiệp tiêu chuẩn">
-                {PRESETS.map((p) => (
-                  <option key={p.id} value={p.id} className="bg-slate-900 text-slate-100 py-1">
-                    {p.name} [{p.badge}]
-                  </option>
-                ))}
+              <optgroup label={t('toolbar.industryPresets')}>
+                {PRESETS.map((p) => {
+                  const loc = getLocalizedPreset(p.id, language);
+                  return (
+                    <option key={p.id} value={p.id} className="bg-slate-900 text-slate-100 py-1">
+                      {loc.name} [{loc.badge}]
+                    </option>
+                  );
+                })}
               </optgroup>
-              <optgroup label="⚙️ Thao tác nhanh">
+              <optgroup label={t('toolbar.quickActions')}>
                 <option value="__create_new__" className="bg-slate-900 text-sky-400 font-bold">
-                  + Tạo mẫu máy mới...
+                  {t('toolbar.createNewAction')}
                 </option>
                 <option value="__open_modal__" className="bg-slate-900 text-slate-300">
-                  📁 Quản lý chi tiết & Xuất/Nhập JSON...
+                  {t('toolbar.manageJsonAction')}
                 </option>
               </optgroup>
             </select>
@@ -661,7 +691,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 setShowAddMenu(false);
               }}
               className="p-1 hover:bg-slate-700 text-slate-400 hover:text-slate-100 rounded transition-colors cursor-pointer"
-              title="Mở bảng danh sách chi tiết (Đổi tên, nhân bản, xóa mẫu)"
+              title={language === 'en' ? 'Open model manager (Rename, duplicate, delete)' : language === 'ko' ? '기계 모델 관리 (이름 변경, 복제, 삭제)' : 'Mở bảng danh sách chi tiết (Đổi tên, nhân bản, xóa mẫu)'}
             >
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
@@ -674,7 +704,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               <div className="flex items-center justify-between pb-2 border-b border-slate-800">
                 <div className="flex items-center gap-1.5 font-semibold text-xs text-sky-400">
                   <Layers className="w-4 h-4 text-sky-400" />
-                  <span>DANH SÁCH MẪU DÀN MÁY</span>
+                  <span>{t('modal.save.listTitle')}</span>
                 </div>
                 <button
                   type="button"
@@ -697,8 +727,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                 >
                   <PlusCircle className="w-4 h-4 text-sky-400 shrink-0" />
                   <div>
-                    <div className="text-xs">+ Tạo dàn máy mới (Trống trơn)</div>
-                    <div className="text-[10px] text-slate-400 font-normal">Tự do build sắp đặt các trục theo ý bạn</div>
+                    <div className="text-xs">
+                      {language === 'en' ? '+ Create New Machine Layout' : language === 'ko' ? '+ 신규 기계 레이아웃 생성' : '+ Tạo dàn máy mới (Trống trơn)'}
+                    </div>
+                    <div className="text-[10px] text-slate-400 font-normal">
+                      {language === 'en' ? 'Freely build and arrange axles as needed' : language === 'ko' ? '자유롭게 롤러 축을 배치하고 설계하세요' : 'Tự do build sắp đặt các trục theo ý bạn'}
+                    </div>
                   </div>
                 </button>
               )}
@@ -707,14 +741,16 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between px-1">
                   <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase">
-                    Mẫu bạn đã lưu ({savedConfigs.length})
+                    {language === 'en' ? `Saved Models (${savedConfigs.length})` : language === 'ko' ? `저장된 모델 (${savedConfigs.length})` : `Mẫu bạn đã lưu (${savedConfigs.length})`}
                   </span>
-                  <span className="text-[10px] text-slate-500">1-click để tải</span>
+                  <span className="text-[10px] text-slate-500">
+                    {language === 'en' ? '1-click to load' : language === 'ko' ? '1-클릭 불러오기' : '1-click để tải'}
+                  </span>
                 </div>
 
                 {savedConfigs.length === 0 ? (
                   <div className="px-3 py-2 text-[11px] text-slate-500 italic bg-slate-950/60 rounded-lg border border-slate-800">
-                    Chưa có mẫu tự lưu nào. Hãy tùy chỉnh máy rồi bấm <strong>Lưu mẫu</strong>!
+                    {language === 'en' ? 'No saved custom models yet. Customize and click Save Model!' : language === 'ko' ? '저장된 사용자 모델이 없습니다. 기계를 조정한 후 모델 저장을 클릭하세요!' : 'Chưa có mẫu tự lưu nào. Hãy tùy chỉnh máy rồi bấm Lưu mẫu!'}
                   </div>
                 ) : (
                   savedConfigs.map((cfg) => {
@@ -739,7 +775,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                             type="button"
                             onClick={(e) => handleSaveRename(e, cfg.id)}
                             className="p-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded cursor-pointer"
-                            title="Xác nhận đổi tên"
+                            title={language === 'en' ? 'Confirm rename' : language === 'ko' ? '이름 변경 확인' : 'Xác nhận đổi tên'}
                           >
                             <Check className="w-3 h-3" />
                           </button>
@@ -747,7 +783,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                             type="button"
                             onClick={() => setEditingId(null)}
                             className="p-1 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded cursor-pointer"
-                            title="Hủy"
+                            title={language === 'en' ? 'Cancel' : language === 'ko' ? '취소' : 'Hủy'}
                           >
                             <X className="w-3 h-3" />
                           </button>
@@ -773,12 +809,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                             <span>{cfg.name}</span>
                             {isSelected && (
                               <span className="text-[9px] bg-emerald-900/90 text-emerald-200 px-1 py-0.2 rounded font-mono">
-                                Đang chọn
+                                {language === 'en' ? 'Active' : language === 'ko' ? '선택됨' : 'Đang chọn'}
                               </span>
                             )}
                           </div>
                           <div className="text-[10px] text-slate-500 font-mono">
-                            {cfg.components.length} chi tiết • {new Date(cfg.savedAt).toLocaleDateString('vi-VN')}
+                            {cfg.components.length} {language === 'en' ? 'parts' : language === 'ko' ? '개 부품' : 'chi tiết'} • {new Date(cfg.savedAt).toLocaleDateString(language === 'en' ? 'en-US' : language === 'ko' ? 'ko-KR' : 'vi-VN')}
                           </div>
                         </div>
 
@@ -789,7 +825,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                               type="button"
                               onClick={(e) => handleStartRename(e, cfg)}
                               className="p-1 text-slate-400 hover:text-sky-300 hover:bg-slate-700/60 rounded transition-colors cursor-pointer"
-                              title="Đổi tên mẫu"
+                              title={language === 'en' ? 'Rename model' : language === 'ko' ? '이름 변경' : 'Đổi tên mẫu'}
                             >
                               <Edit2 className="w-3 h-3" />
                             </button>
@@ -802,7 +838,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                                 onDuplicateConfig(cfg.id);
                               }}
                               className="p-1 text-slate-400 hover:text-sky-300 hover:bg-slate-700/60 rounded transition-colors cursor-pointer"
-                              title="Nhân bản mẫu này"
+                              title={language === 'en' ? 'Duplicate model' : language === 'ko' ? '모델 복제' : 'Nhân bản mẫu này'}
                             >
                               <Copy className="w-3 h-3" />
                             </button>
@@ -812,12 +848,13 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                if (window.confirm(`Bạn có chắc muốn xóa mẫu "${cfg.name}"?`)) {
+                                const confirmText = language === 'en' ? `Delete model "${cfg.name}"?` : language === 'ko' ? `"${cfg.name}" 모델을 삭제하시겠습니까?` : `Bạn có chắc muốn xóa mẫu "${cfg.name}"?`;
+                                if (window.confirm(confirmText)) {
                                   onDeleteConfig(cfg.id);
                                 }
                               }}
                               className="p-1 text-slate-400 hover:text-rose-400 hover:bg-rose-950/60 rounded transition-colors cursor-pointer"
-                              title="Xóa mẫu này"
+                              title={language === 'en' ? 'Delete model' : language === 'ko' ? '모델 삭제' : 'Xóa mẫu này'}
                             >
                               <Trash2 className="w-3 h-3" />
                             </button>
@@ -832,10 +869,11 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               {/* MẪU CÔNG NGHIỆP CÓ SẴN (FACTORY PRESETS) */}
               <div className="space-y-1.5 pt-2 border-t border-slate-800">
                 <span className="text-[10px] font-mono text-sky-400 font-bold uppercase px-1 block">
-                  Mẫu công nghiệp nhà máy ({PRESETS.length})
+                  {language === 'en' ? `Factory Standard Presets (${PRESETS.length})` : language === 'ko' ? `공장 표준 프리셋 (${PRESETS.length})` : `Mẫu công nghiệp nhà máy (${PRESETS.length})`}
                 </span>
                 {PRESETS.map((p) => {
                   const isSelected = activeModelId === p.id;
+                  const localizedP = getLocalizedPreset(p.id, language);
                   return (
                     <button
                       key={p.id}
@@ -851,12 +889,12 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-xs">{p.name}</span>
+                        <span className="font-semibold text-xs">{localizedP.name}</span>
                         <span className="text-[10px] bg-slate-800 text-sky-400 px-1.5 py-0.5 rounded font-mono">
-                          {p.badge}
+                          {localizedP.badge}
                         </span>
                       </div>
-                      <span className="text-[10px] text-slate-400 line-clamp-1">{p.description}</span>
+                      <span className="text-[10px] text-slate-400 line-clamp-1">{localizedP.description}</span>
                     </button>
                   );
                 })}
@@ -873,7 +911,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
                   className="w-full py-2 text-center text-xs text-sky-400 hover:text-sky-300 hover:bg-slate-800 rounded-lg transition-colors font-medium border border-slate-800 cursor-pointer flex items-center justify-center gap-1.5"
                 >
                   <FolderOpen className="w-3.5 h-3.5" />
-                  <span>Quản lý chi tiết & sao lưu tập tin JSON...</span>
+                  <span>{t('modal.save.title')}...</span>
                 </button>
               </div>
             </div>
@@ -889,17 +927,17 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               setShowModelMenu(false);
             }}
             className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-xs font-semibold border border-slate-700 shadow-sm transition-colors cursor-pointer"
-            title="Lắp thêm chi tiết mới vào dàn máy"
+            title={t('toolbar.addComponent')}
           >
             <Plus className="w-3.5 h-3.5 text-sky-400" />
-            <span>Thêm trục</span>
+            <span>{t('toolbar.addComponent')}</span>
             <ChevronDown className="w-3 h-3 text-slate-400" />
           </button>
 
           {showAddMenu && (
             <div className="absolute right-0 top-full mt-2 w-72 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-[100] p-2 space-y-1">
               <span className="text-[10px] font-mono uppercase text-slate-400 px-2 py-1 block font-semibold border-b border-slate-800 mb-1">
-                Chọn chi tiết lắp thêm vào máy
+                {t('toolbar.addComponent')}
               </span>
               {componentAddOptions.map((opt) => (
                 <button
@@ -924,10 +962,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           type="button"
           onClick={onOpenGapCalibrator}
           className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-300 rounded-lg text-xs font-medium border border-slate-700 transition-colors cursor-pointer"
-          title="Căn chỉnh chính xác khe hở milimet giữa các trục"
+          title={t('toolbar.gapCalibrator')}
         >
           <Target className="w-3.5 h-3.5 text-sky-400" />
-          <span>Khe hở mm</span>
+          <span>{t('toolbar.gapCalibrator')}</span>
         </button>
 
         {/* 6. MỞ TAB MỚI */}
@@ -935,10 +973,10 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           type="button"
           onClick={onOpenNewTabModal}
           className="hidden md:flex items-center gap-1 px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-sky-300 rounded-lg text-xs font-medium border border-slate-700 transition-colors cursor-pointer"
-          title="Mở toàn màn hình trong tab mới độc lập"
+          title={t('header.openNewTabTitle')}
         >
           <ExternalLink className="w-3.5 h-3.5 text-sky-400" />
-          <span>Tab mới ↗</span>
+          <span>{t('header.openNewTab')}</span>
         </button>
 
         {/* 7. FULLSCREEN */}
@@ -950,7 +988,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               ? 'bg-sky-600 border-sky-500 text-white font-semibold'
               : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'
           }`}
-          title={isFullscreen ? 'Thu nhỏ cửa sổ' : 'Phóng to toàn màn hình'}
+          title={isFullscreen ? t('toolbar.exitFullscreen') : t('toolbar.fullscreen')}
         >
           {isFullscreen ? <Minimize className="w-3.5 h-3.5" /> : <Maximize className="w-3.5 h-3.5 text-sky-400" />}
         </button>
@@ -964,7 +1002,7 @@ export const Toolbar: React.FC<ToolbarProps> = ({
               ? 'bg-slate-800 hover:bg-slate-700 text-slate-300 border-slate-700'
               : 'bg-sky-950/70 border-sky-600 text-sky-300'
           }`}
-          title={isSidebarOpen ? 'Thu gọn bảng thông số bên phải' : 'Hiện bảng thông số bên phải'}
+          title={t('toolbar.sidebarToggle')}
         >
           {isSidebarOpen ? <PanelRightClose className="w-3.5 h-3.5" /> : <PanelRightOpen className="w-3.5 h-3.5" />}
         </button>

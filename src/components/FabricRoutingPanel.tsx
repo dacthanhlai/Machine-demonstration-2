@@ -1,6 +1,8 @@
 import React from 'react';
 import { FabricRoutingConfig, MaterialFeedConfig, MachineComponent, FabricPathStep } from '../types/machine';
 import { calculateMaterialFeedRate } from '../utils/physicsEngine';
+import { useLanguage } from '../i18n';
+import { getLocalizedComponentName } from '../utils/localization';
 import {
   Route,
   ArrowRightLeft,
@@ -34,6 +36,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
   components,
   isRunning,
 }) => {
+  const { t, language } = useLanguage();
   // Lấy danh sách các trục và dao tham gia hành trình dải vải dệt (loại trừ miệng hút và trống ngưng kết)
   const routableComponents = components.filter((c) => c.type !== 'suction_hood' && c.type !== 'condenser_drum');
 
@@ -156,11 +159,11 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
   };
 
   const colorPresets = [
-    { label: 'Xanh Denim', hex: '#2563eb' },
-    { label: 'Trắng Cotton', hex: '#f8fafc' },
-    { label: 'Xám Sợi Tái Sinh', hex: '#64748b' },
-    { label: 'Đỏ Vải Vụn', hex: '#e11d48' },
-    { label: 'Vàng Kaki', hex: '#d97706' },
+    { label: language === 'en' ? 'Denim Blue' : language === 'ko' ? '데님 블루' : 'Xanh Denim', hex: '#2563eb' },
+    { label: language === 'en' ? 'Cotton White' : language === 'ko' ? '코튼 화이트' : 'Trắng Cotton', hex: '#f8fafc' },
+    { label: language === 'en' ? 'Recycled Grey' : language === 'ko' ? '재생 섬유 그레이' : 'Xám Sợi Tái Sinh', hex: '#64748b' },
+    { label: language === 'en' ? 'Scrap Red' : language === 'ko' ? '원단 레드' : 'Đỏ Vải Vụn', hex: '#e11d48' },
+    { label: language === 'en' ? 'Flax Khaki' : language === 'ko' ? '마 섬유 카키' : 'Vàng Kaki', hex: '#d97706' },
   ];
 
   return (
@@ -169,7 +172,8 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
       <div className="bg-gradient-to-br from-indigo-950/70 via-slate-900 to-slate-900 p-4 rounded-xl border border-indigo-500/50 shadow-xl space-y-3.5">
         <div className="flex items-center justify-between border-b border-indigo-900/60 pb-2">
           <span className="font-bold text-indigo-200 flex items-center gap-2 text-sm">
-            <Layers className="w-4 h-4 text-indigo-400" /> BỘ ĐIỀU KHIỂN KHỔ VẢI & ĐỘ DÀY
+            <Layers className="w-4 h-4 text-indigo-400" />{' '}
+            {language === 'en' ? 'FABRIC WIDTH & THICKNESS CONTROLLER' : language === 'ko' ? '원단 폭 및 두께 제어기' : 'BỘ ĐIỀU KHIỂN KHỔ VẢI & ĐỘ DÀY'}
           </span>
           <span className="font-mono text-indigo-300 font-bold bg-indigo-950/90 border border-indigo-500/50 px-2.5 py-0.5 rounded-lg text-xs shadow-sm">
             {fabricRouting.clothWidthMm || 850} mm
@@ -179,7 +183,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
         {/* Khổ rộng dải vải mm */}
         <div className="space-y-1.5">
           <div className="flex justify-between items-center text-[11px] text-slate-300">
-            <span>Bề rộng dải vải cấp vào (Khổ vải):</span>
+            <span>{t('viewport.fabricWidthLabel')}</span>
             <span className="font-mono text-indigo-300 font-bold text-xs">{fabricRouting.clothWidthMm || 850} mm</span>
           </div>
           <input
@@ -216,16 +220,23 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
             ))}
           </div>
           <div className="flex items-center justify-between text-[10px] text-slate-400 bg-slate-950/70 p-2 rounded border border-slate-800">
-            <span>Khổ vải hỗ trợ: <strong className="text-slate-200 font-mono">400 - 2000 mm</strong></span>
-            <span className="text-emerald-400 font-medium">✓ Tang trống tự động co giãn theo khổ</span>
+            <span>
+              {language === 'en' ? 'Supported width: ' : language === 'ko' ? '지원 폭: ' : 'Khổ vải hỗ trợ: '}
+              <strong className="text-slate-200 font-mono">400 - 2000 mm</strong>
+            </span>
+            <span className="text-emerald-400 font-medium">
+              {language === 'en' ? '✓ Cylinders auto-scale to width' : language === 'ko' ? '✓ 실린더 폭 자동 동기화' : '✓ Tang trống tự động co giãn theo khổ'}
+            </span>
           </div>
         </div>
 
         {/* Số lớp vải & Độ dày tương đương */}
         <div className="space-y-1.5 pt-1 border-t border-slate-800/80">
           <div className="flex justify-between items-center text-[11px] text-slate-300">
-            <span>Độ dày dải vải (Số lớp kẹp cấp):</span>
-            <span className="font-mono text-sky-300 font-bold">{layers} lớp (~{(layers * 0.9).toFixed(1)} mm)</span>
+            <span>{t('viewport.fabricThickLabel')}</span>
+            <span className="font-mono text-sky-300 font-bold">
+              {layers} {language === 'en' ? 'layers' : language === 'ko' ? '겹' : 'lớp'} (~{(layers * 0.9).toFixed(1)} mm)
+            </span>
           </div>
           <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 6, 8].map((l) => (
@@ -255,10 +266,11 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
       <div className="bg-slate-900 p-3.5 rounded-lg border border-slate-800 space-y-2.5">
         <div className="flex items-center justify-between">
           <span className="font-semibold text-slate-200 flex items-center gap-1.5">
-            <ArrowRightLeft className="w-4 h-4 text-sky-400" /> Hướng Nạp Vải / Bông Vào Máy
+            <ArrowRightLeft className="w-4 h-4 text-sky-400" />{' '}
+            {language === 'en' ? 'Infeed Direction (Fabric / Cotton)' : language === 'ko' ? '원단 / 솜 공급 방향' : 'Hướng Nạp Vải / Bông Vào Máy'}
           </span>
           <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-800/70 px-2 py-0.5 rounded">
-            {materialConfig.feedSpeedMPerMin} m/phút
+            {materialConfig.feedSpeedMPerMin} {t('common.mPerMin')}
           </span>
         </div>
 
@@ -274,7 +286,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                 : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
             }`}
           >
-            <span>Trái ➔ Phải (Chuẩn)</span>
+            <span>{t('tension.dirStandard')}</span>
           </button>
 
           <button
@@ -288,7 +300,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                 : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700'
             }`}
           >
-            <span>Phải ➔ Trái (Nghịch)</span>
+            <span>{t('tension.dirReverse')}</span>
           </button>
         </div>
       </div>
@@ -297,18 +309,23 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
       <div className="bg-slate-900 p-3.5 rounded-lg border border-slate-800 space-y-3">
         <div className="flex items-center justify-between">
           <span className="font-semibold text-slate-200 flex items-center gap-1.5">
-            <Scale className="w-4 h-4 text-emerald-400" /> Số Lượng Vải / Bông Cấp Vào Máy
+            <Scale className="w-4 h-4 text-emerald-400" />{' '}
+            {language === 'en' ? 'Raw Material Infeed Throughput' : language === 'ko' ? '원자재 공급 처리량' : 'Số Lượng Vải / Bông Cấp Vào Máy'}
           </span>
           <span className="font-mono text-emerald-400 font-bold text-xs bg-emerald-950/70 px-2 py-0.5 rounded border border-emerald-800/80">
-            {kgPerHour} kg/giờ
+            {kgPerHour} {t('common.kgPerHour')}
           </span>
         </div>
 
         {/* Số lớp vải cấp vào */}
         <div className="space-y-1.5">
           <div className="flex justify-between text-[11px] text-slate-400">
-            <span>Số lớp vải cấp cùng lúc (Dày mỏng):</span>
-            <span className="font-mono text-sky-300 font-bold">{layers} lớp</span>
+            <span>
+              {language === 'en' ? 'Number of simultaneous feed layers:' : language === 'ko' ? '동시 공급 원단 겹수:' : 'Số lớp vải cấp cùng lúc (Dày mỏng):'}
+            </span>
+            <span className="font-mono text-sky-300 font-bold">
+              {layers} {language === 'en' ? 'layers' : language === 'ko' ? '겹' : 'lớp'}
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
             {[1, 2, 3, 4, 6, 8].map((l) => (
@@ -336,7 +353,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
         {/* Định lượng vải GSM */}
         <div className="space-y-1">
           <div className="flex justify-between text-[11px] text-slate-400">
-            <span>Định lượng vải (GSM):</span>
+            <span>{language === 'en' ? 'Fabric Basis Weight (GSM):' : language === 'ko' ? '원단 평량 (GSM):' : 'Định lượng vải (GSM):'}</span>
             <span className="font-mono text-slate-200 font-semibold">{gsm} g/m²</span>
           </div>
           <input
@@ -358,8 +375,8 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
         {/* Tốc độ cấp liệu m/phút */}
         <div className="space-y-1">
           <div className="flex justify-between text-[11px] text-slate-400">
-            <span>Tốc độ cấp băng chuyền vào:</span>
-            <span className="font-mono text-emerald-300 font-semibold">{speed} m/phút</span>
+            <span>{language === 'en' ? 'Infeed conveyor linear speed:' : language === 'ko' ? '공급 컨베이어 이송 속도:' : 'Tốc độ cấp băng chuyền vào:'}</span>
+            <span className="font-mono text-emerald-300 font-semibold">{speed} {t('common.mPerMin')}</span>
           </div>
           <input
             type="range"
@@ -380,38 +397,43 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
         {/* Bảng tính sản lượng nạp liệu tức thời */}
         <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800 text-[11px]">
           <div className="p-2 bg-slate-950 rounded border border-slate-800">
-            <span className="text-slate-400 text-[10px] block">Sản lượng theo giờ:</span>
+            <span className="text-slate-400 text-[10px] block">
+              {language === 'en' ? 'Hourly output:' : language === 'ko' ? '시간당 생산량:' : 'Sản lượng theo giờ:'}
+            </span>
             <span className="font-mono text-emerald-400 font-bold text-xs">{kgPerHour} kg/h</span>
           </div>
           <div className="p-2 bg-slate-950 rounded border border-slate-800">
-            <span className="text-slate-400 text-[10px] block">Năng suất ca 8 tiếng:</span>
-            <span className="font-mono text-sky-400 font-bold text-xs">~{kgPerShift} kg/ca</span>
+            <span className="text-slate-400 text-[10px] block">
+              {language === 'en' ? '8h shift capacity:' : language === 'ko' ? '8시간 교대 생산량:' : 'Năng suất ca 8 tiếng:'}
+            </span>
+            <span className="font-mono text-sky-400 font-bold text-xs">~{kgPerShift} kg/shift</span>
           </div>
         </div>
       </div>
-
 
       {/* 2. Danh sách các trục trong tuyến đường đi của vải */}
       <div className="bg-slate-900 p-3.5 rounded-lg border border-slate-800 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             <Route className="w-4 h-4 text-sky-400" />
-            <span className="font-semibold text-slate-100">Lộ Trình Luồn Vải Qua Từng Trục</span>
+            <span className="font-semibold text-slate-100">
+              {language === 'en' ? 'Fabric Threading Route' : language === 'ko' ? '원단 경로 안내' : 'Lộ Trình Luồn Vải Qua Từng Trục'}
+            </span>
           </div>
 
           <button
             type="button"
             onClick={handleResetAutoRoute}
             className="flex items-center gap-1 px-2 py-1 bg-slate-800 hover:bg-slate-700 text-sky-300 rounded text-[10px] font-medium border border-slate-700 transition-colors"
-            title="Tự động xếp theo thứ tự tọa độ các trục"
+            title={t('routing.autoRoute')}
           >
             <RotateCcw className="w-3 h-3" />
-            <span>Tự động sắp xếp</span>
+            <span>{language === 'en' ? 'Auto-Sort' : language === 'ko' ? '자동 정렬' : 'Tự động sắp xếp'}</span>
           </button>
         </div>
 
         <p className="text-[11px] text-slate-400 leading-relaxed">
-          Tích chọn trục vải sẽ đi qua, chọn kiểu quấn quanh trục (Mặt trên, Mặt dưới, hoặc Tiếp tuyến dao cắt):
+          {t('tension.pathInstructions')}
         </p>
 
         {/* Danh sách các bước luồn vải */}
@@ -443,7 +465,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                           #{idx + 1}
                         </span>
                         <span className="font-semibold text-slate-100 truncate block">
-                          {comp.name}
+                          {getLocalizedComponentName(comp, language)}
                         </span>
                       </div>
                       <span className="font-mono text-[9px] text-slate-400">
@@ -459,7 +481,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                       disabled={idx === 0}
                       onClick={() => handleMoveStep(idx, 'up')}
                       className="p-1 hover:bg-slate-800 disabled:opacity-30 text-slate-400 hover:text-slate-200 rounded"
-                      title="Di chuyển lên trước"
+                      title={language === 'en' ? 'Move step up' : language === 'ko' ? '순서 위로 이동' : 'Di chuyển lên trước'}
                     >
                       <MoveUp className="w-3.5 h-3.5" />
                     </button>
@@ -468,7 +490,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                       disabled={idx === steps.length - 1}
                       onClick={() => handleMoveStep(idx, 'down')}
                       className="p-1 hover:bg-slate-800 disabled:opacity-30 text-slate-400 hover:text-slate-200 rounded"
-                      title="Di chuyển xuống sau"
+                      title={language === 'en' ? 'Move step down' : language === 'ko' ? '순서 아래로 이동' : 'Di chuyển xuống sau'}
                     >
                       <MoveDown className="w-3.5 h-3.5" />
                     </button>
@@ -492,7 +514,9 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                             }`}
                           >
                             <Sparkles className="w-3.5 h-3.5 text-emerald-300" />
-                            <span>Giữa trục & trống (Chạy trong khe chải)</span>
+                            <span>
+                              {language === 'en' ? 'Carding Gap (Between roller & cylinder)' : language === 'ko' ? '소면 간극 통과 (실린더-롤러 사이)' : 'Giữa trục & trống (Chạy trong khe chải)'}
+                            </span>
                           </button>
                           <button
                             type="button"
@@ -503,7 +527,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                                 : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
                             }`}
                           >
-                            Vòng ngoài dưới
+                            {language === 'en' ? 'Outer Lower' : language === 'ko' ? '하부 외곽' : 'Vòng ngoài dưới'}
                           </button>
                           <button
                             type="button"
@@ -514,7 +538,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                                 : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
                             }`}
                           >
-                            Vòng ngoài trên
+                            {language === 'en' ? 'Outer Upper' : language === 'ko' ? '상부 외곽' : 'Vòng ngoài trên'}
                           </button>
                         </div>
 
@@ -523,12 +547,12 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                             <Sparkles className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                             <span>
                               {step.wrapMode === 'carding_gap'
-                                ? 'Dòng vải/xơ chạy kẹp chính xác trong khe hở kỹ thuật 1.5 - 3mm giữa trục chải và trống chính'
-                                : 'Dòng vải chạy vòng ra ngoài trục vệ tinh'}
+                                ? (language === 'en' ? 'Material feeds precisely inside the 1.5 - 3mm technical carding gap' : language === 'ko' ? '원단 및 섬유가 실린더와 롤러 사이 1.5 - 3mm 소면 간극에서 개섬됩니다' : 'Dòng vải/xơ chạy kẹp chính xác trong khe hở kỹ thuật 1.5 - 3mm giữa trục chải và trống chính')
+                                : (language === 'en' ? 'Material routes around satellite roller exterior' : language === 'ko' ? '원단이 위성 롤러 외곽으로 우회합니다' : 'Dòng vải chạy vòng ra ngoài trục vệ tinh')}
                             </span>
                           </span>
                           <span className="font-mono text-emerald-400 font-bold shrink-0 ml-1">
-                            {step.wrapMode === 'carding_gap' ? 'Khe chải kẹp' : 'Vòng ngoài'}
+                            {step.wrapMode === 'carding_gap' ? (language === 'en' ? 'Carding Nip' : language === 'ko' ? '간극 닙' : 'Khe chải kẹp') : (language === 'en' ? 'Outer' : language === 'ko' ? '외곽' : 'Vòng ngoài')}
                           </span>
                         </div>
                       </div>
@@ -544,7 +568,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                                 : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
                             }`}
                           >
-                            Ôm đáy & sườn ra
+                            {language === 'en' ? 'Under Wrap (~180°)' : language === 'ko' ? '하부 랩핑 (~180°)' : 'Ôm đáy & sườn ra'}
                           </button>
                           <button
                             type="button"
@@ -555,7 +579,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                                 : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
                             }`}
                           >
-                            Ôm nửa trên đỉnh
+                            {language === 'en' ? 'Top Wrap (~160°)' : language === 'ko' ? '상부 정점 (~160°)' : 'Ôm nửa trên đỉnh'}
                           </button>
                           <button
                             type="button"
@@ -566,7 +590,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                                 : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
                             }`}
                           >
-                            Tiếp xúc xé
+                            {language === 'en' ? 'Tangent Nip' : language === 'ko' ? '접선 접촉' : 'Tiếp xúc xé'}
                           </button>
                         </div>
 
@@ -575,14 +599,14 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                             <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
                             <span>
                               {step.wrapMode === 'under'
-                                ? 'Cung ôm tự nhiên: Ôm từ dao cắt qua đáy và lượn lên sườn ra (~180° chu vi)'
+                                ? (language === 'en' ? 'Natural under-wrap: From ledger knife around bottom cylinder arc (~180°)' : language === 'ko' ? '자연스러운 하부 감김: 나이프에서 실린더 바닥을 감싸 올라가는 경로 (~180°)' : 'Cung ôm tự nhiên: Ôm từ dao cắt qua đáy và lượn lên sườn ra (~180° chu vi)')
                                 : step.wrapMode === 'over'
-                                ? 'Cung ôm đỉnh trống: Đi qua nửa trên chu vi (~160°)'
-                                : 'Tiếp tuyến: Chạm tiếp xúc điểm xé'}
+                                ? (language === 'en' ? 'Top cylinder arc: Over the top half of the drum (~160°)' : language === 'ko' ? '실린더 상부 랩핑: 드럼 윗부분 통과 (~160°)' : 'Cung ôm đỉnh trống: Đi qua nửa trên chu vi (~160°)')
+                                : (language === 'en' ? 'Tangent: Touches opening point and transfers immediately' : language === 'ko' ? '접선: 개섬 지점에서 즉시 분리' : 'Tiếp tuyến: Chạm tiếp xúc điểm xé')}
                             </span>
                           </span>
                           <span className="font-mono text-emerald-400 font-bold shrink-0 ml-1">
-                            {step.wrapMode === 'under' ? 'Ôm đầy đủ ~180°' : 'Tiếp xúc'}
+                            {step.wrapMode === 'under' ? (language === 'en' ? 'Full ~180°' : language === 'ko' ? '완전 180°' : 'Ôm đầy đủ ~180°') : (language === 'en' ? 'Tangent' : language === 'ko' ? '접선' : 'Tiếp xúc')}
                           </span>
                         </div>
                       </div>
@@ -598,7 +622,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                                 : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
                             }`}
                           >
-                            Vòng trên dao cắt
+                            {language === 'en' ? 'Over Knife' : language === 'ko' ? '나이프 상부' : 'Vòng trên dao cắt'}
                           </button>
                           <button
                             type="button"
@@ -609,7 +633,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                                 : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
                             }`}
                           >
-                            Tiếp xúc mũi dao
+                            {language === 'en' ? 'Blade Edge Nip' : language === 'ko' ? '나이프 엣지' : 'Tiếp xúc mũi dao'}
                           </button>
                           <button
                             type="button"
@@ -620,7 +644,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                                 : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
                             }`}
                           >
-                            Vòng dưới dao
+                            {language === 'en' ? 'Under Base' : language === 'ko' ? '베이스 하부' : 'Vòng dưới dao'}
                           </button>
                         </div>
 
@@ -629,14 +653,14 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                             <Sparkles className="w-3.5 h-3.5 text-sky-400 shrink-0" />
                             <span>
                               {step.wrapMode === 'over'
-                                ? 'Chuẩn xé vải: Vải đi dưới feed roller ➔ qua tấm chắn mỏng ➔ vòng trên dao cắt ➔ bị trống lớn kéo xuống xé tại khe cắt.'
+                                ? (language === 'en' ? 'Standard opener: Fabric feeds under feed roller ➔ over bed knife ➔ drawn down into tearing nip.' : language === 'ko' ? '표준 개섬: 원단이 피드 롤러 아래 ➔ 베드 나이프 상부 ➔ 실린더 닙으로 당겨져 개섬됩니다.' : 'Chuẩn xé vải: Vải đi dưới feed roller ➔ qua tấm chắn mỏng ➔ vòng trên dao cắt ➔ bị trống lớn kéo xuống xé tại khe cắt.')
                                 : step.wrapMode === 'tangent'
-                                ? 'Tiếp xúc mép cắt: Vải tiếp xúc trực tiếp tại lưỡi dao trước khi răng trống kéo vào.'
-                                : 'Vòng qua đáy dưới của bệ dao cắt.'}
+                                ? (language === 'en' ? 'Cutting edge contact: Fabric makes direct contact with blade tip before cylinder wire pulls it.' : language === 'ko' ? '나이프 팁 접촉: 실린더 침포가 당기기 전 나이프 엣지와 직접 접촉합니다.' : 'Tiếp xúc mép cắt: Vải tiếp xúc trực tiếp tại lưỡi dao trước khi răng trống kéo vào.')
+                                : (language === 'en' ? 'Under knife bracket base.' : language === 'ko' ? '나이프 브래킷 하부 우회.' : 'Vòng qua đáy dưới của bệ dao cắt.')}
                             </span>
                           </span>
                           <span className="font-mono text-emerald-400 font-bold shrink-0 ml-1">
-                            {step.wrapMode === 'over' ? 'Chuẩn máy xé' : step.wrapMode === 'tangent' ? 'Tiếp xúc' : 'Vòng dưới'}
+                            {step.wrapMode === 'over' ? (language === 'en' ? 'Standard' : language === 'ko' ? '표준' : 'Chuẩn máy xé') : step.wrapMode === 'tangent' ? (language === 'en' ? 'Edge Nip' : language === 'ko' ? '접선' : 'Tiếp xúc') : (language === 'en' ? 'Under' : language === 'ko' ? '하부' : 'Vòng dưới')}
                           </span>
                         </div>
                       </div>
@@ -652,7 +676,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                                 : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
                             }`}
                           >
-                            Vòng trên
+                            {language === 'en' ? 'Upper Wrap' : language === 'ko' ? '상부 랩핑' : 'Vòng trên'}
                           </button>
                           <button
                             type="button"
@@ -663,7 +687,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                                 : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
                             }`}
                           >
-                            Vòng dưới
+                            {language === 'en' ? 'Lower Wrap' : language === 'ko' ? '하부 랩핑' : 'Vòng dưới'}
                           </button>
                           <button
                             type="button"
@@ -674,7 +698,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                                 : 'bg-slate-900 text-slate-400 hover:text-slate-200 border border-slate-800'
                             }`}
                           >
-                            Tiếp xúc cắt
+                            {language === 'en' ? 'Tangent Nip' : language === 'ko' ? '접선 접촉' : 'Tiếp xúc cắt'}
                           </button>
                         </div>
 
@@ -682,9 +706,13 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
                           <div className="mt-2 p-2 bg-indigo-950/70 border border-indigo-700/60 rounded text-[10px] text-indigo-200 flex items-center justify-between">
                             <span className="flex items-center gap-1.5 font-medium">
                               <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                              <span>Quy tắc chuẩn: Đi vòng dưới feed roller ➔ ôm trục chuyển vào khe dao &amp; trống ➔ bị trống lớn cuốn xuống.</span>
+                              <span>
+                                {language === 'en' ? 'Standard rule: Passes under feed roller ➔ leads into knife & drum nip.' : language === 'ko' ? '표준 규칙: 피드 롤러 하부를 지나 ➔ 나이프 및 실린더 닙으로 진입합니다.' : 'Quy tắc chuẩn: Đi vòng dưới feed roller ➔ ôm trục chuyển vào khe dao & trống ➔ bị trống lớn cuốn xuống.'}
+                              </span>
                             </span>
-                            <span className="font-mono text-emerald-400 font-bold shrink-0 ml-1">Chuẩn máy xé</span>
+                            <span className="font-mono text-emerald-400 font-bold shrink-0 ml-1">
+                              {language === 'en' ? 'Standard' : language === 'ko' ? '표준' : 'Chuẩn máy xé'}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -700,13 +728,14 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
       {/* 3. Tùy chỉnh mô hình 3D: Khổ vải & Màu sắc & Bông xơ */}
       <div className="bg-slate-900 p-3.5 rounded-lg border border-slate-800 space-y-3">
         <span className="font-semibold text-slate-200 flex items-center gap-1.5">
-          <Palette className="w-4 h-4 text-sky-400" /> Tùy Chỉnh Mô Hình Vải & Bông 3D
+          <Palette className="w-4 h-4 text-sky-400" />{' '}
+          {language === 'en' ? '3D Fabric & Fiber Visuals' : language === 'ko' ? '3D 원단 및 섬유 비주얼 설정' : 'Tùy Chỉnh Mô Hình Vải & Bông 3D'}
         </span>
 
         {/* Khổ rộng vải */}
         <div className="space-y-1">
           <div className="flex justify-between text-[11px] text-slate-400">
-            <span>Khổ rộng dải vải 3D:</span>
+            <span>{language === 'en' ? '3D Fabric Width:' : language === 'ko' ? '3D 원단 폭:' : 'Khổ rộng dải vải 3D:'}</span>
             <span className="font-mono text-sky-300 font-bold">{fabricRouting.clothWidthMm || 850} mm</span>
           </div>
           <input
@@ -724,7 +753,9 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
 
         {/* Màu sắc mô hình vải */}
         <div className="space-y-1.5 pt-1">
-          <label className="text-[11px] text-slate-400 block">Màu sắc tấm vải dệt 3D:</label>
+          <label className="text-[11px] text-slate-400 block">
+            {language === 'en' ? '3D Woven Fabric Color:' : language === 'ko' ? '3D 직물 색상:' : 'Màu sắc tấm vải dệt 3D:'}
+          </label>
           <div className="grid grid-cols-3 gap-1.5">
             {colorPresets.map((p) => (
               <button
@@ -758,7 +789,9 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
             className="accent-sky-500 rounded cursor-pointer w-4 h-4"
           />
           <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span>Hiển thị cụm bông xơ 3D tơi xốp & luồng khí hút khi máy xé vải</span>
+          <span>
+            {language === 'en' ? 'Display 3D fluffy fiber tufts & suction airflow during operation' : language === 'ko' ? '기계 작동 중 3D 솜 뭉치 및 흡입 기류 표시' : 'Hiển thị cụm bông xơ 3D tơi xốp & luồng khí hút khi máy xé vải'}
+          </span>
         </label>
 
         {/* Tùy chọn Ẩn / Hiện Cây cuộn vải cấp liệu 3D phía trước */}
@@ -772,7 +805,7 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
             className="accent-indigo-500 rounded cursor-pointer w-4 h-4"
           />
           <Layers className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-          <span>Hiển thị cây cuộn vải cấp liệu 3D phía trước (Fabric Supply Roll Stand)</span>
+          <span>{t('fabric.supplyRoll')} ({t('fabric.supplyRollToggle')})</span>
         </label>
       </div>
 
@@ -780,13 +813,10 @@ export const FabricRoutingPanel: React.FC<FabricRoutingPanelProps> = ({
       <div className="p-3 bg-slate-950 rounded-lg border border-emerald-950/60 text-[11px] text-slate-400 space-y-1.5">
         <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
           <Eye className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Nguyên lý công nghệ máy xé tái chế vải vụn:</span>
+          <span>{t('routing.principleTitle')}</span>
         </div>
         <p className="leading-relaxed">
-          Khi nhấn <strong className="text-emerald-400">{isRunning ? 'Tạm dừng' : 'Chạy thử'}</strong>: Tấm vải vụn dệt (Denim, Knit, Cotton) được nạp vào qua cặp trục ép và dao cắt. Khi tiếp xúc với răng kim trống xé chính và các cặp trục chải/trục bóc (Worker & Stripper), cấu trúc dệt bị đánh tơi hoàn toàn thành <strong className="text-amber-300">100% xơ bông tơi xốp</strong>.
-        </p>
-        <p className="leading-relaxed text-slate-300">
-          Toàn bộ xơ bông thành phẩm được quạt hút hút vọt qua <strong className="text-emerald-400">Ống hút khí động</strong> (Pneumatic Suction Duct) chuyển sang cyclone/máy xé tiếp theo. Tuyệt đối không còn cuộn vải dệt nào chạy ra hay gập lại ở đầu ra.
+          {t('routing.principleBody')}
         </p>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MachineComponent, RotationDirection, SurfaceType, RollerType, FabricRoutingConfig } from '../types/machine';
 import { getLinearVelocity, calculateGap, rpmToHz, hzToRpm } from '../utils/physicsEngine';
+import { useLanguage } from '../i18n';
 import { Trash2, Copy, ArrowRightLeft, Compass, Gauge, Ruler, Cog, AlertCircle, Target, Sparkles, Sliders, Zap, Lock, Unlock, Route, Check } from 'lucide-react';
 
 interface NumericInputProps {
@@ -139,9 +140,11 @@ const GapInputItem: React.FC<GapInputItemProps> = ({ currentGap, onApply, isColl
     }
   };
 
+  const { t, language } = useLanguage();
+
   return (
     <div className="flex items-center gap-1.5">
-      <span className="text-[10px] text-slate-400">Nhập khe:</span>
+      <span className="text-[10px] text-slate-400">{t('inspector.enterGap', 'Nhập khe:')}</span>
       <input
         type="text"
         inputMode="decimal"
@@ -176,9 +179,9 @@ const GapInputItem: React.FC<GapInputItemProps> = ({ currentGap, onApply, isColl
           commit();
         }}
         className="px-1.5 py-0.5 bg-sky-600 hover:bg-sky-500 text-white rounded text-[10px] font-semibold cursor-pointer transition-colors shadow-sm flex items-center gap-0.5"
-        title="Áp dụng khe hở vừa nhập (hoặc bấm Enter)"
+        title={t('inspector.applyGap', 'Áp dụng khe hở vừa nhập (hoặc bấm Enter)')}
       >
-        <span>Áp dụng</span>
+        <span>{t('inspector.apply', 'Áp dụng')}</span>
       </button>
       <span className="font-mono text-[10px] text-slate-400">mm</span>
     </div>
@@ -210,13 +213,15 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
   fabricRouting,
   onChangeFabricRouting,
 }) => {
+  const { t, language } = useLanguage();
+
   if (!selectedComponent) {
     return (
       <div className="p-6 text-center text-slate-500 flex flex-col items-center justify-center h-full">
         <Cog className="w-10 h-10 text-slate-700 mb-3 animate-spin-slow" />
-        <p className="text-sm font-medium text-slate-400">Chưa chọn trục hoặc chi tiết máy nào</p>
+        <p className="text-sm font-medium text-slate-400">{t('inspector.title')}</p>
         <p className="text-xs text-slate-600 mt-1 max-w-xs">
-          Nhấp chuột vào bất kỳ trục, trống, dao cắt hoặc ống hút trên khung nhìn 3D hoặc bản vẽ CAD để chỉnh sửa thông số.
+          {t('inspector.emptyPrompt')}
         </p>
       </div>
     );
@@ -255,21 +260,21 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                 ? 'bg-amber-950/80 text-amber-300 border border-amber-600/70 font-semibold'
                 : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'
             }`}
-            title={selectedComponent.isLocked ? 'Trục này đang bị khóa vị trí cố định. Bấm để mở khóa' : 'Khóa cố định vị trí trục này, chống kéo di chuyển'}
+            title={selectedComponent.isLocked ? t('toolbar.unlock') : t('toolbar.lock')}
           >
             {selectedComponent.isLocked ? <Lock className="w-4 h-4 text-amber-400" /> : <Unlock className="w-4 h-4" />}
           </button>
           <button
             onClick={() => onDuplicateComponent(selectedComponent.id)}
             className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-slate-200 rounded transition-colors"
-            title="Nhân bản chi tiết"
+            title={t('inspector.duplicate')}
           >
             <Copy className="w-4 h-4" />
           </button>
           <button
             onClick={() => onDeleteComponent(selectedComponent.id)}
             className="p-1.5 hover:bg-rose-950/80 text-rose-400 hover:text-rose-300 rounded transition-colors"
-            title="Xóa chi tiết"
+            title={t('inspector.delete')}
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -280,10 +285,10 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
       <div className="space-y-2">
         <div className="flex items-center justify-between text-slate-400">
           <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-            <Ruler className="w-3.5 h-3.5 text-sky-400" /> Tọa độ tâm trục (mm)
+            <Ruler className="w-3.5 h-3.5 text-sky-400" /> {t('inspector.posX')} / {t('inspector.posY')}
             {selectedComponent.isLocked && (
               <span className="text-[10px] text-amber-400 bg-amber-950/60 border border-amber-800/80 px-1.5 py-0.5 rounded font-mono flex items-center gap-1">
-                <Lock className="w-3 h-3" /> Đã khóa
+                <Lock className="w-3 h-3" /> {t('toolbar.lock')}
               </span>
             )}
           </span>
@@ -291,13 +296,13 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
             onClick={() => onOpenGapCalibrator(selectedComponent.id)}
             className="text-[11px] text-sky-400 hover:text-sky-300 underline font-medium"
           >
-            Chỉnh cự ly khe hở chính xác
+            {t('inspector.calibrateGap')}
           </button>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-slate-900 p-2.5 rounded border border-slate-800">
             <div className="flex justify-between text-[11px] text-slate-400 mb-1">
-              <span>Tọa độ X</span>
+              <span>{t('inspector.posX')}</span>
               <span className="font-mono text-slate-500">mm</span>
             </div>
             <div className="flex items-center gap-1">
@@ -325,7 +330,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
 
           <div className="bg-slate-900 p-2.5 rounded border border-slate-800">
             <div className="flex justify-between text-[11px] text-slate-400 mb-1">
-              <span>Tọa độ Y</span>
+              <span>{t('inspector.coordsY', 'Tọa độ Y')}</span>
               <span className="font-mono text-slate-500">mm</span>
             </div>
             <div className="flex items-center gap-1">
@@ -370,9 +375,9 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
           <div className="space-y-2.5 pt-2 border-t border-slate-800">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-sky-300 flex items-center gap-1.5">
-                <Target className="w-3.5 h-3.5 text-sky-400" /> Cự ly khe hở tới vật thể khác (mm)
+                <Target className="w-3.5 h-3.5 text-sky-400" /> {t('inspector.clearanceHeader', 'Cự ly khe hở tới vật thể khác (mm)')}
               </span>
-              <span className="text-[10px] text-slate-500 font-mono">Tự động dịch chuyển</span>
+              <span className="text-[10px] text-slate-500 font-mono">{t('inspector.autoShift', 'Tự động dịch chuyển')}</span>
             </div>
 
             <div className="space-y-2">
@@ -414,7 +419,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                           type="button"
                           onClick={() => onAdjustDistance(selectedComponent.id, other.id, Number((gapMm - 0.5).toFixed(1)))}
                           className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-mono text-[10px] cursor-pointer"
-                          title="Thu hẹp 0.5mm"
+                          title={language === 'en' ? 'Decrease 0.5mm' : language === 'ko' ? '0.5mm 축소' : 'Thu hẹp 0.5mm'}
                         >
                           -0.5
                         </button>
@@ -422,7 +427,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                           type="button"
                           onClick={() => onAdjustDistance(selectedComponent.id, other.id, Number((gapMm - 0.1).toFixed(1)))}
                           className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-mono text-[10px] cursor-pointer"
-                          title="Thu hẹp 0.1mm"
+                          title={language === 'en' ? 'Decrease 0.1mm' : language === 'ko' ? '0.1mm 축소' : 'Thu hẹp 0.1mm'}
                         >
                           -0.1
                         </button>
@@ -438,7 +443,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                               ? 'bg-sky-600 text-white border-sky-400 font-bold'
                               : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border-slate-700'
                           }`}
-                          title="0.8mm (Ép cấp)"
+                          title={language === 'en' ? '0.8mm (Feed nip)' : language === 'ko' ? '0.8mm (피드 닙)' : '0.8mm (Ép cấp)'}
                         >
                           0.8
                         </button>
@@ -450,7 +455,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                               ? 'bg-sky-600 text-white border-sky-400 font-bold'
                               : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border-slate-700'
                           }`}
-                          title="1.5mm (Dao - Trống)"
+                          title={language === 'en' ? '1.5mm (Knife - Drum)' : language === 'ko' ? '1.5mm (나이프 - 드럼)' : '1.5mm (Dao - Trống)'}
                         >
                           1.5
                         </button>
@@ -462,7 +467,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                               ? 'bg-sky-600 text-white border-sky-400 font-bold'
                               : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border-slate-700'
                           }`}
-                          title="2.0mm (Worker - Trống)"
+                          title={language === 'en' ? '2.0mm (Worker - Drum)' : language === 'ko' ? '2.0mm (워커 - 드럼)' : '2.0mm (Worker - Trống)'}
                         >
                           2.0
                         </button>
@@ -474,7 +479,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                               ? 'bg-sky-600 text-white border-sky-400 font-bold ring-1 ring-sky-300'
                               : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border-slate-700'
                           }`}
-                          title="2.5mm (Chuẩn khe hở)"
+                          title={language === 'en' ? '2.5mm (Standard gap)' : language === 'ko' ? '2.5mm (표준 간극)' : '2.5mm (Chuẩn khe hở)'}
                         >
                           2.5
                         </button>
@@ -486,7 +491,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                               ? 'bg-sky-600 text-white border-sky-400 font-bold'
                               : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 border-slate-700'
                           }`}
-                          title="3.0mm (Bông xốp)"
+                          title={language === 'en' ? '3.0mm (Fluffy fiber)' : language === 'ko' ? '3.0mm (벌키 솜)' : '3.0mm (Bông xốp)'}
                         >
                           3.0
                         </button>
@@ -497,7 +502,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                           type="button"
                           onClick={() => onAdjustDistance(selectedComponent.id, other.id, Number((gapMm + 0.1).toFixed(1)))}
                           className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-mono text-[10px] cursor-pointer"
-                          title="Mở rộng 0.1mm"
+                          title={language === 'en' ? 'Increase 0.1mm' : language === 'ko' ? '0.1mm 확장' : 'Mở rộng 0.1mm'}
                         >
                           +0.1
                         </button>
@@ -505,7 +510,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                           type="button"
                           onClick={() => onAdjustDistance(selectedComponent.id, other.id, Number((gapMm + 0.5).toFixed(1)))}
                           className="px-1.5 py-0.5 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded font-mono text-[10px] cursor-pointer"
-                          title="Mở rộng 0.5mm"
+                          title={language === 'en' ? 'Increase 0.5mm' : language === 'ko' ? '0.5mm 확장' : 'Mở rộng 0.5mm'}
                         >
                           +0.5
                         </button>
@@ -547,10 +552,16 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
           <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-emerald-300 flex items-center gap-1.5">
-                <Route className="w-3.5 h-3.5 text-emerald-400" /> Tuyến Đi Của Vải Qua Trục Này
+                <Route className="w-3.5 h-3.5 text-emerald-400" /> {t('inspector.pathTitle', 'Tuyến Đi Của Vải Qua Trục Này')}
               </span>
               <span className="font-mono text-[10px] text-emerald-300 bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-800/80">
-                {currentMode === 'carding_gap' ? 'Kẹp trong khe chải' : currentMode === 'over' ? 'Vòng trên' : currentMode === 'under' ? 'Vòng dưới' : 'Tiếp tuyến dao'}
+                {currentMode === 'carding_gap'
+                  ? (language === 'en' ? 'Carding Nip' : language === 'ko' ? '간극 닙' : 'Kẹp trong khe chải')
+                  : currentMode === 'over'
+                  ? (language === 'en' ? 'Over' : language === 'ko' ? '상부' : 'Vòng trên')
+                  : currentMode === 'under'
+                  ? (language === 'en' ? 'Under' : language === 'ko' ? '하부' : 'Vòng dưới')
+                  : (language === 'en' ? 'Tangent Nip' : language === 'ko' ? '접선 닙' : 'Tiếp tuyến dao')}
               </span>
             </div>
 
@@ -567,7 +578,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                     }`}
                   >
                     <Sparkles className="w-4 h-4 text-emerald-300" />
-                    <span>Chạy kẹp giữa trục & trống (Trong khe chải)</span>
+                    <span>{language === 'en' ? 'Carding Nip (Between roller & cylinder)' : language === 'ko' ? '소면 간극 통과 (실린더-롤러 사이)' : 'Chạy kẹp giữa trục & trống (Trong khe chải)'}</span>
                   </button>
 
                   <button
@@ -579,7 +590,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                         : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800'
                     }`}
                   >
-                    Vòng ra mặt ngoài dưới
+                    {language === 'en' ? 'Outer Lower Wrap' : language === 'ko' ? '하부 외곽 우회' : 'Vòng ra mặt ngoài dưới'}
                   </button>
 
                   <button
@@ -591,7 +602,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                         : 'bg-slate-950 text-slate-400 hover:text-slate-200 border border-slate-800'
                     }`}
                   >
-                    Vòng ra mặt ngoài trên
+                    {language === 'en' ? 'Outer Upper Wrap' : language === 'ko' ? '상부 외곽 우회' : 'Vòng ra mặt ngoài trên'}
                   </button>
                 </div>
 
@@ -600,8 +611,8 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                     <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                     <span>
                       {currentMode === 'carding_gap'
-                        ? 'Vải chạy kẹp chính xác qua khe hở kỹ thuật giữa trục và trống chính'
-                        : 'Vải chạy vòng ra mặt ngoài'}
+                        ? (language === 'en' ? 'Material feeds precisely inside technical carding gap' : language === 'ko' ? '원단이 정밀 소면 간극을 통해 통과합니다' : 'Vải chạy kẹp chính xác qua khe hở kỹ thuật giữa trục và trống chính')
+                        : (language === 'en' ? 'Material routes around exterior' : language === 'ko' ? '원단이 외곽으로 우회합니다' : 'Vải chạy vòng ra mặt ngoài')}
                     </span>
                   </span>
                   <button
@@ -613,7 +624,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                         : 'bg-slate-800 text-slate-400 border-slate-700 hover:text-slate-200'
                     }`}
                   >
-                    {isEnabled ? 'Đang bật' : 'Đã tắt'}
+                    {isEnabled ? (language === 'en' ? 'Enabled' : language === 'ko' ? '활성화' : 'Đang bật') : (language === 'en' ? 'Disabled' : language === 'ko' ? '비활성화' : 'Đã tắt')}
                   </button>
                 </div>
               </div>
@@ -625,12 +636,12 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
       {/* Kích thước hình học: Đường kính & Chiều dài */}
       <div className="space-y-2 pt-2 border-t border-slate-800/80">
         <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-          <Compass className="w-3.5 h-3.5 text-sky-400" /> Kích thước hình học (Hình trụ)
+          <Compass className="w-3.5 h-3.5 text-sky-400" /> {t('inspector.geomHeader', 'Kích thước hình học (Hình trụ)')}
         </span>
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-slate-900 p-2.5 rounded border border-slate-800">
             <div className="flex justify-between text-[11px] text-slate-400 mb-1">
-              <span>Đường kính Ø</span>
+              <span>{t('inspector.diameter', 'Đường kính Ø')}</span>
               <span className="font-mono text-slate-500">mm</span>
             </div>
             <NumericInput
@@ -644,7 +655,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
 
           <div className="bg-slate-900 p-2.5 rounded border border-slate-800">
             <div className="flex justify-between text-[11px] text-slate-400 mb-1">
-              <span>Chiều dài trục L</span>
+              <span>{t('inspector.length', 'Chiều dài trục L')}</span>
               <span className="font-mono text-slate-500">mm</span>
             </div>
             <NumericInput
@@ -662,12 +673,12 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
       {selectedComponent.type !== 'cutter_knife' && selectedComponent.type !== 'suction_hood' && (
         <div className="space-y-3 pt-2 border-t border-slate-800/80">
           <span className="font-semibold text-slate-300 flex items-center gap-1.5">
-            <Gauge className="w-3.5 h-3.5 text-sky-400" /> Động học quay & Chiều quay
+            <Gauge className="w-3.5 h-3.5 text-sky-400" /> {t('inspector.kinematicsHeader', 'Động học quay & Chiều quay')}
           </span>
 
           {/* Chọn chiều quay */}
           <div>
-            <label className="text-[11px] text-slate-400 mb-1.5 block">Chiều quay trục:</label>
+            <label className="text-[11px] text-slate-400 mb-1.5 block">{t('inspector.direction', 'Chiều quay trục')}:</label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -678,7 +689,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                     : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <span>↻ CW (Thuận kim)</span>
+                <span>{t('inspector.dirCW', '↻ CW (Thuận kim)')}</span>
               </button>
               <button
                 type="button"
@@ -689,7 +700,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                     : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-slate-200'
                 }`}
               >
-                <span>↺ CCW (Ngược kim)</span>
+                <span>{t('inspector.dirCCW', '↺ CCW (Ngược kim)')}</span>
               </button>
             </div>
           </div>
@@ -698,7 +709,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
           <div className="bg-slate-900 p-3 rounded-lg border border-slate-800 space-y-2.5">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-xs text-slate-200 flex items-center gap-1.5">
-                <Zap className="w-3.5 h-3.5 text-amber-400" /> Tần số biến tần (Hz):
+                <Zap className="w-3.5 h-3.5 text-amber-400" /> {t('inspector.vfdFreq', 'Tần số biến tần (Hz):')}
               </span>
               <div className="flex items-center gap-1">
                 <NumericInput
@@ -767,11 +778,11 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
             {/* Thông số tương đương RPM & Vận tốc dài */}
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800 text-[11px]">
               <div className="flex justify-between items-center bg-slate-950 px-2 py-1 rounded border border-slate-800/80">
-                <span className="text-slate-400">Tốc độ góc:</span>
+                <span className="text-slate-400">{t('inspector.rpmSpeed', 'Tốc độ góc:')}</span>
                 <span className="font-mono font-semibold text-sky-400">{selectedComponent.rpm} RPM</span>
               </div>
               <div className="flex justify-between items-center bg-slate-950 px-2 py-1 rounded border border-slate-800/80">
-                <span className="text-slate-400">Vận tốc dài:</span>
+                <span className="text-slate-400">{t('inspector.surfaceVelocity', 'Vận tốc dài:')}</span>
                 <span className="font-mono font-semibold text-emerald-400">{v} m/p</span>
               </div>
             </div>
@@ -782,7 +793,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
       {/* Bề mặt tang trống & Dạng răng kim */}
       <div className="space-y-3 pt-2 border-t border-slate-800/80">
         <div className="flex items-center justify-between">
-          <label className="font-semibold text-slate-300 block">Dạng bề mặt làm việc:</label>
+          <label className="font-semibold text-slate-300 block">{t('inspector.surfaceHeader', 'Dạng bề mặt làm việc:')}</label>
           {onOpenCardClothingModal && (
             <button
               type="button"
@@ -790,7 +801,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
               className="text-[11px] text-sky-400 hover:text-sky-300 flex items-center gap-1 font-semibold underline"
             >
               <Sparkles className="w-3 h-3 text-sky-400" />
-              <span>Soi vi mô đồ kim</span>
+              <span>{t('inspector.cardClothingInspect', 'Soi vi mô đồ kim')}</span>
             </button>
           )}
         </div>
@@ -800,11 +811,11 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
           onChange={(e) => handleChange('surfaceType', e.target.value as SurfaceType)}
           className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-sky-500"
         >
-          <option value="wire_teeth">Gai xé thép / Dây kim răng cưa nhọn (Wire Teeth)</option>
-          <option value="fluted_steel">Khía rãnh thép kẹp chặt chống trượt (Fluted Steel)</option>
-          <option value="smooth_rubber">Bọc cao su ép áp lực (Smooth Rubber)</option>
-          <option value="blade">Lưỡi hợp kim dao cắt tĩnh (Alloy Blade)</option>
-          <option value="mesh_perforated">Lưới inox đục lỗ hút gió (Perforated Mesh)</option>
+          <option value="wire_teeth">{language === 'en' ? 'Card Clothing Sawtooth Wire (Wire Teeth)' : language === 'ko' ? '침포 와이어 소면 톱니 (Wire Teeth)' : 'Gai xé thép / Dây kim răng cưa nhọn (Wire Teeth)'}</option>
+          <option value="fluted_steel">{language === 'en' ? 'Fluted Steel Grip (Anti-slip)' : language === 'ko' ? '홈 가공 스틸 롤러' : 'Khía rãnh thép kẹp chặt chống trượt (Fluted Steel)'}</option>
+          <option value="smooth_rubber">{language === 'en' ? 'Smooth Pressure Rubber' : language === 'ko' ? '평활 압력 고무 롤러' : 'Bọc cao su ép áp lực (Smooth Rubber)'}</option>
+          <option value="blade">{language === 'en' ? 'Stationary Alloy Blade' : language === 'ko' ? '고정 합금 나이프' : 'Lưỡi hợp kim dao cắt tĩnh (Alloy Blade)'}</option>
+          <option value="mesh_perforated">{language === 'en' ? 'Perforated Vacuum Mesh' : language === 'ko' ? '타공 흡입 메쉬' : 'Lưới inox đục lỗ hút gió (Perforated Mesh)'}</option>
         </select>
 
         {/* Thông số kỹ thuật chi tiết đồ kim (Tooth pitch, angle, height) */}
@@ -814,13 +825,13 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
           selectedComponent.type === 'stripper_roller') && (
           <div className="p-3 bg-slate-900 rounded-lg border border-slate-800 space-y-2 text-[11px]">
             <div className="flex items-center justify-between font-semibold text-sky-300">
-              <span>Thông Số Đồ Kim Răng Cưa:</span>
-              <span className="font-mono text-[10px] text-slate-400">Tiêu chuẩn dệt</span>
+              <span>{t('inspector.clothingHeader', 'Thông Số Đồ Kim Răng Cưa:')}</span>
+              <span className="font-mono text-[10px] text-slate-400">{t('inspector.industryStandard', 'Tiêu chuẩn dệt')}</span>
             </div>
 
             <div className="grid grid-cols-3 gap-2">
               <div className="bg-slate-950 p-2 rounded border border-slate-800">
-                <span className="text-[10px] text-slate-400 block">Bước kim p</span>
+                <span className="text-[10px] text-slate-400 block">{t('inspector.wirePitch', 'Bước kim p')}</span>
                 <div className="flex items-center gap-1 mt-0.5">
                   <NumericInput
                     step={0.1}
@@ -835,7 +846,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
               </div>
 
               <div className="bg-slate-950 p-2 rounded border border-slate-800">
-                <span className="text-[10px] text-slate-400 block">Chiều cao H</span>
+                <span className="text-[10px] text-slate-400 block">{t('inspector.wireHeight', 'Chiều cao H')}</span>
                 <div className="flex items-center gap-1 mt-0.5">
                   <NumericInput
                     step={0.1}
@@ -850,7 +861,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
               </div>
 
               <div className="bg-slate-950 p-2 rounded border border-slate-800">
-                <span className="text-[10px] text-slate-400 block">Góc nghiêng</span>
+                <span className="text-[10px] text-slate-400 block">{t('inspector.wireAngle', 'Góc nghiêng')}</span>
                 <div className="flex items-center gap-1 mt-0.5">
                   <NumericInput
                     step={1}
@@ -872,7 +883,7 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
                 className="w-full mt-1.5 py-1.5 bg-sky-950/70 hover:bg-sky-900 text-sky-300 border border-sky-800 rounded text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors"
               >
                 <Sparkles className="w-3.5 h-3.5 text-sky-400" />
-                <span>Mở bảng giải phẫu đồ kim & tiêu chuẩn hãng</span>
+                <span>{t('inspector.openClothingModal', 'Mở bảng giải phẫu đồ kim & tiêu chuẩn hãng')}</span>
               </button>
             )}
           </div>
@@ -881,19 +892,19 @@ export const RollerInspector: React.FC<RollerInspectorProps> = ({
 
       {/* Phân loại trục */}
       <div className="space-y-2 pt-2 border-t border-slate-800/80">
-        <label className="font-semibold text-slate-300 block">Chức năng công nghệ:</label>
+        <label className="font-semibold text-slate-300 block">{t('inspector.roleHeader', 'Chức năng công nghệ:')}</label>
         <select
           value={selectedComponent.type}
           onChange={(e) => handleChange('type', e.target.value as RollerType)}
           className="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 outline-none focus:border-sky-500"
         >
-          <option value="main_drum">Trống xé chính (Main Drum)</option>
-          <option value="feed_roller">Trục ép / Cấp liệu (Feed Roller)</option>
-          <option value="worker_roller">Trục chải (Worker Roller)</option>
-          <option value="stripper_roller">Trục bóc (Stripper Roller)</option>
-          <option value="cutter_knife">Dao cắt / Gạt tĩnh (Cutter Knife)</option>
-          <option value="suction_hood">Miệng hút chân không (Suction Hood)</option>
-          <option value="condenser_drum">Trống ngưng kết (Condenser Drum)</option>
+          <option value="main_drum">{t('roller.type.main_cylinder', 'Trống xé chính')}</option>
+          <option value="feed_roller">{t('roller.type.feed_roller', 'Trục ép / Cấp liệu')}</option>
+          <option value="worker_roller">{t('roller.type.worker_roller', 'Trục chải')}</option>
+          <option value="stripper_roller">{t('roller.type.stripper_roller', 'Trục bóc')}</option>
+          <option value="cutter_knife">{t('roller.type.cutter_fixed', 'Dao cắt / Gạt tĩnh')}</option>
+          <option value="suction_hood">{t('roller.type.suction_hood', 'Miệng hút chân không')}</option>
+          <option value="condenser_drum">{t('roller.type.condenser_drum', 'Trống ngưng kết')}</option>
         </select>
       </div>
     </div>

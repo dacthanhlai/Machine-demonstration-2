@@ -15,6 +15,8 @@ import { ExportModal } from './components/ExportModal';
 import { SavedConfigsModal } from './components/SavedConfigsModal';
 import { OpenTabModal } from './components/OpenTabModal';
 import { CardClothingModal } from './components/CardClothingModal';
+import { useLanguage } from './i18n';
+import { getLocalizedModelName } from './utils/localization';
 import { Sliders, ShieldAlert, Activity, ChevronRight, AlertTriangle, AlertCircle, Sparkles, Route, CheckCircle2, Layers } from 'lucide-react';
 
 interface MachineSnapshot {
@@ -25,6 +27,7 @@ interface MachineSnapshot {
 }
 
 export default function App() {
+  const { t, language } = useLanguage();
   const initialPreset = PRESETS[0];
 
   // Quản lý mẫu / Dàn máy hiện tại
@@ -121,8 +124,8 @@ export default function App() {
     setFabricRouting(previousSnap.fabricRouting);
     setSuctionConfig(previousSnap.suctionConfig);
     setMaterialConfig(previousSnap.materialConfig);
-    showToast('↶ Đã hoàn tác thao tác');
-  }, [undoStack, components, fabricRouting, suctionConfig, materialConfig, showToast]);
+    showToast(language === 'en' ? '↶ Action Undone' : language === 'ko' ? '↶ 실행 취소 완료' : '↶ Đã hoàn tác thao tác');
+  }, [undoStack, components, fabricRouting, suctionConfig, materialConfig, showToast, language]);
 
   const handleRedo = useCallback(() => {
     if (redoStack.length === 0) return;
@@ -140,8 +143,8 @@ export default function App() {
     setFabricRouting(nextSnap.fabricRouting);
     setSuctionConfig(nextSnap.suctionConfig);
     setMaterialConfig(nextSnap.materialConfig);
-    showToast('↷ Đã làm lại thao tác');
-  }, [redoStack, components, fabricRouting, suctionConfig, materialConfig, showToast]);
+    showToast(language === 'en' ? '↷ Action Redone' : language === 'ko' ? '↷ 다시 실행 완료' : '↷ Đã làm lại thao tác');
+  }, [redoStack, components, fabricRouting, suctionConfig, materialConfig, showToast, language]);
 
   // Cấu hình đã lưu trong localStorage
   const [savedConfigs, setSavedConfigs] = useState<SavedConfiguration[]>(() => {
@@ -189,7 +192,14 @@ export default function App() {
       };
       setSavedConfigs(updated);
       setIsDirty(false);
-      showToast(`✓ Đã lưu thành công dàn máy "${activeModelName}"!`);
+      const displayModel = getLocalizedModelName(activeModelName, language);
+      showToast(
+        language === 'en'
+          ? `✓ Saved machine model "${displayModel}"!`
+          : language === 'ko'
+          ? `✓ 기계 모델 "${displayModel}" 저장 완료!`
+          : `✓ Đã lưu thành công dàn máy "${activeModelName}"!`
+      );
     } else {
       // Nếu đang ở preset mẫu hoặc máy mới chưa lưu: tự tạo bản lưu mới
       const newId = `custom_${Date.now()}`;
@@ -211,9 +221,16 @@ export default function App() {
       setActiveModelId(newId);
       setActiveModelName(newName);
       setIsDirty(false);
-      showToast(`✓ Đã lưu thành công dàn máy "${newName}"!`);
+      const displayModel = getLocalizedModelName(newName, language);
+      showToast(
+        language === 'en'
+          ? `✓ Saved machine model "${displayModel}"!`
+          : language === 'ko'
+          ? `✓ 기계 모델 "${displayModel}" 저장 완료!`
+          : `✓ Đã lưu thành công dàn máy "${newName}"!`
+      );
     }
-  }, [activeModelId, activeModelName, savedConfigs, components, suctionConfig, materialConfig, fabricRouting, showToast]);
+  }, [activeModelId, activeModelName, savedConfigs, components, suctionConfig, materialConfig, fabricRouting, showToast, language]);
 
   // TẠO MẪU MỚI 1-CLICK (CREATE NEW MACHINE MODEL)
   const handleCreateNewModel = useCallback(() => {
@@ -285,8 +302,15 @@ export default function App() {
     setComponents(starterComponents);
     setSelectedId(starterComponents[2].id);
     setIsDirty(false);
-    showToast(`+ Đã tạo "${newName}". Hãy tự do build máy và bấm "Lưu mẫu"!`);
-  }, [takeSnapshot, savedConfigs.length, suctionConfig, materialConfig, fabricRouting, showToast]);
+    const displayCreated = getLocalizedModelName(newName, language);
+    showToast(
+      language === 'en'
+        ? `+ Created "${displayCreated}". Build your layout and click "Save Model"!`
+        : language === 'ko'
+        ? `+ "${displayCreated}" 생성됨. 레이아웃 배치 후 "모델 저장"을 누르세요!`
+        : `+ Đã tạo "${newName}". Hãy tự do build máy và bấm "Lưu mẫu"!`
+    );
+  }, [takeSnapshot, savedConfigs.length, suctionConfig, materialConfig, fabricRouting, showToast, language]);
 
   // Đổi tên mẫu
   const handleRenameConfig = useCallback((id: string, newName: string) => {
@@ -297,8 +321,14 @@ export default function App() {
     if (activeModelId === id) {
       setActiveModelName(newName.trim());
     }
-    showToast(`✓ Đã đổi tên thành "${newName.trim()}"`);
-  }, [activeModelId, showToast]);
+    showToast(
+      language === 'en'
+        ? `✓ Renamed to "${newName.trim()}"`
+        : language === 'ko'
+        ? `✓ 이름이 "${newName.trim()}"(으)로 변경되었습니다`
+        : `✓ Đã đổi tên thành "${newName.trim()}"`
+    );
+  }, [activeModelId, showToast, language]);
 
   // Nhân bản mẫu
   const handleDuplicateConfig = useCallback((id: string) => {
@@ -314,8 +344,15 @@ export default function App() {
       savedAt: new Date().toISOString(),
     };
     setSavedConfigs((prev) => [copyConfig, ...prev]);
-    showToast(`📋 Đã nhân bản: "${copyName}"`);
-  }, [takeSnapshot, savedConfigs, showToast]);
+    const displayCopy = getLocalizedModelName(copyName, language);
+    showToast(
+      language === 'en'
+        ? `📋 Duplicated: "${displayCopy}"`
+        : language === 'ko'
+        ? `📋 복제됨: "${displayCopy}"`
+        : `📋 Đã nhân bản: "${copyName}"`
+    );
+  }, [takeSnapshot, savedConfigs, showToast, language]);
 
   // Xóa mẫu
   const handleDeleteConfig = useCallback((id: string) => {
@@ -328,8 +365,8 @@ export default function App() {
       setComponents(p.components);
       setIsDirty(false);
     }
-    showToast('🗑️ Đã xóa mẫu');
-  }, [activeModelId, showToast]);
+    showToast(language === 'en' ? '🗑️ Model deleted' : language === 'ko' ? '🗑️ 모델 삭제됨' : '🗑️ Đã xóa mẫu');
+  }, [activeModelId, showToast, language]);
 
   // Tải mẫu tự lưu
   const handleLoadSavedModel = useCallback((config: SavedConfiguration) => {
@@ -344,8 +381,15 @@ export default function App() {
     }
     setSelectedId(null);
     setIsDirty(false);
-    showToast(`⚡ Đã tải mẫu: "${config.name}"`);
-  }, [takeSnapshot, showToast]);
+    const displayLoaded = getLocalizedModelName(config.name, language);
+    showToast(
+      language === 'en'
+        ? `⚡ Loaded setup: "${displayLoaded}"`
+        : language === 'ko'
+        ? `⚡ 설정 불러옴: "${displayLoaded}"`
+        : `⚡ Đã tải mẫu: "${config.name}"`
+    );
+  }, [takeSnapshot, showToast, language]);
 
   // Chọn mẫu công nghiệp (Preset)
   const handleSelectPreset = useCallback((presetId: string) => {
@@ -359,8 +403,15 @@ export default function App() {
     setMaterialConfig(preset.materialConfig);
     setSelectedId(null);
     setIsDirty(false);
-    showToast(`⚡ Đã tải mẫu chuẩn: "${preset.name}"`);
-  }, [takeSnapshot, showToast]);
+    const displayPreset = getLocalizedModelName(preset.name, language);
+    showToast(
+      language === 'en'
+        ? `⚡ Loaded factory preset: "${displayPreset}"`
+        : language === 'ko'
+        ? `⚡ 표준 프리셋 불러옴: "${displayPreset}"`
+        : `⚡ Đã tải mẫu chuẩn: "${preset.name}"`
+    );
+  }, [takeSnapshot, showToast, language]);
 
   // Phím tắt bàn phím toàn cục (Ctrl+Z, Ctrl+Y, Ctrl+S)
   useEffect(() => {
@@ -484,8 +535,14 @@ export default function App() {
       return prev.map((c) => (c.id === moving.id ? { ...c, x: newX, y: newY } : c));
     });
     setIsDirty(true);
-    showToast(`↔ Đã căn cự ly ${targetGapMm.toFixed(2)} mm (Dịch chuyển: ${movedName || 'chi tiết'})!`);
-  }, [takeSnapshot, showToast]);
+    showToast(
+      language === 'en'
+        ? `↔ Aligned gap to ${targetGapMm.toFixed(2)} mm (Shifted: ${movedName || 'component'})!`
+        : language === 'ko'
+        ? `↔ ${targetGapMm.toFixed(2)} mm 정밀 간극 정렬 완료 (이동: ${movedName || '부품'})!`
+        : `↔ Đã căn cự ly ${targetGapMm.toFixed(2)} mm (Dịch chuyển: ${movedName || 'chi tiết'})!`
+    );
+  }, [takeSnapshot, showToast, language]);
 
   // Cập nhật vị trí kéo thả trục
   const handleUpdatePosition = useCallback((id: string, x: number, y: number) => {
@@ -511,7 +568,7 @@ export default function App() {
     setComponents((prev) => prev.filter((c) => c.id !== id));
     if (selectedId === id) setSelectedId(null);
     setIsDirty(true);
-    showToast('Đã xóa chi tiết');
+    showToast(language === 'en' ? 'Component deleted' : language === 'ko' ? '부품 삭제됨' : 'Đã xóa chi tiết');
   };
 
   // Nhân bản chi tiết
@@ -529,7 +586,13 @@ export default function App() {
     setComponents((prev) => [...prev, newComp]);
     setSelectedId(newComp.id);
     setIsDirty(true);
-    showToast(`Đã nhân bản "${original.name}"`);
+    showToast(
+      language === 'en'
+        ? `Duplicated "${original.name}"`
+        : language === 'ko'
+        ? `"${original.name}" 복제 완료`
+        : `Đã nhân bản "${original.name}"`
+    );
   };
 
   // Thêm mới chi tiết máy
@@ -692,7 +755,13 @@ export default function App() {
     });
 
     setIsDirty(true);
-    showToast(`✓ Đã thêm ${newComp.name}`);
+    showToast(
+      language === 'en'
+        ? `✓ Added ${newComp.name}`
+        : language === 'ko'
+        ? `✓ ${newComp.name} 추가됨`
+        : `✓ Đã thêm ${newComp.name}`
+    );
   };
 
   // Mở modal căn chỉnh khe hở mm
@@ -729,7 +798,13 @@ export default function App() {
       )
     );
     setIsDirty(true);
-    showToast(`✓ Đã áp dụng cự ly khe hở chính xác!`);
+    showToast(
+      language === 'en'
+        ? '✓ Applied precise clearance gap!'
+        : language === 'ko'
+        ? '✓ 정밀 간극 설정 적용 완료!'
+        : '✓ Đã áp dụng cự ly khe hở chính xác!'
+    );
   };
 
   // Tự động sửa lỗi kỹ thuật thông minh (1-Click Auto-Fix)
@@ -831,12 +906,16 @@ export default function App() {
         onToggleLock={() => {
           setIsLocked((prev) => {
             const next = !prev;
-            showToast(next ? '🔒 Đã KHÓA vị trí dàn máy (Chống xê dịch nhầm)' : '🔓 Đã MỞ KHÓA (Cho phép kéo di chuyển)');
+            showToast(
+              next
+                ? (language === 'en' ? '🔒 Machine positions LOCKED' : language === 'ko' ? '🔒 기계 위치 고정됨 (드래그 방지)' : '🔒 Đã KHÓA vị trí dàn máy (Chống xê dịch nhầm)')
+                : (language === 'en' ? '🔓 Machine positions UNLOCKED' : language === 'ko' ? '🔓 기계 위치 잠금 해제됨' : '🔓 Đã MỞ KHÓA (Cho phép kéo di chuyển)')
+            );
             return next;
           });
         }}
         activeModelId={activeModelId}
-        activeModelName={activeModelName}
+        activeModelName={getLocalizedModelName(activeModelName, language)}
         isDirty={isDirty}
         onQuickSave={handleQuickSave}
         savedConfigs={savedConfigs}
@@ -907,7 +986,7 @@ export default function App() {
               {/* Nửa bên trái: 3D View */}
               <div className="h-full relative">
                 <div className="absolute top-2 left-2 z-20 px-2 py-0.5 bg-slate-900/90 text-sky-400 font-mono text-[10px] rounded border border-slate-700 pointer-events-none">
-                  KHUNG NHÌN 3D KHÔNG GIAN
+                  {t('view.3d')}
                 </div>
                 <Viewport3D
                   components={components}
@@ -936,7 +1015,7 @@ export default function App() {
               {/* Nửa bên phải: 2D CAD Precision Cross-section */}
               <div className="h-full relative">
                 <div className="absolute top-2 left-2 z-20 px-2 py-0.5 bg-slate-900/90 text-sky-400 font-mono text-[10px] rounded border border-slate-700 pointer-events-none">
-                  BẢN VẼ MẶT CẮT KỸ THUẬT 2D CAD (mm)
+                  {t('cad.canvasTitle')}
                 </div>
                 <SchematicCAD2D
                   components={components}
@@ -971,10 +1050,10 @@ export default function App() {
                     ? 'border-sky-500 text-sky-300 bg-slate-900 font-bold'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
                 }`}
-                title="Hiệu chỉnh thông số trục và cự ly khe hở mm"
+                title={t('inspector.title')}
               >
                 <Sliders className="w-3.5 h-3.5 text-sky-400" />
-                <span className="truncate">Trục & Cự ly</span>
+                <span className="truncate">{t('sidebar.tab.inspector')}</span>
               </button>
 
               <button
@@ -984,10 +1063,10 @@ export default function App() {
                     ? 'border-indigo-500 text-indigo-300 bg-slate-900 font-bold'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
                 }`}
-                title="Tùy chỉnh khổ vải cấp vào (mm), độ dày và hướng đi của dải vải"
+                title={t('fabric.menuTitle')}
               >
                 <Layers className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="truncate">Khổ & Vải</span>
+                <span className="truncate">{t('sidebar.tab.routing')}</span>
               </button>
 
               <button
@@ -997,10 +1076,10 @@ export default function App() {
                     ? 'border-sky-500 text-sky-300 bg-slate-900 font-bold'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
                 }`}
-                title="Chẩn đoán lỗi xung đột quay và va chạm cơ khí"
+                title={t('diagnostics.title')}
               >
                 <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
-                <span className="truncate">Chẩn đoán</span>
+                <span className="truncate">{t('sidebar.tab.diagnostics')}</span>
                 {dangerCount > 0 && (
                   <span className="w-2 h-2 rounded-full bg-rose-500 ml-0.5" />
                 )}
@@ -1013,10 +1092,10 @@ export default function App() {
                     ? 'border-sky-500 text-sky-300 bg-slate-900 font-bold'
                     : 'border-transparent text-slate-400 hover:text-slate-200'
                 }`}
-                title="Giả lập lực căng thời gian thực và điều khiển hút khí"
+                title={t('tension.title')}
               >
                 <Activity className="w-3.5 h-3.5 text-emerald-400" />
-                <span className="truncate">Lực căng</span>
+                <span className="truncate">{t('sidebar.tab.tension')}</span>
               </button>
             </div>
 
@@ -1082,10 +1161,10 @@ export default function App() {
           <button
             onClick={() => setIsSidebarOpen(true)}
             className="absolute top-4 right-4 z-30 px-3 py-2 bg-slate-900/95 hover:bg-slate-800 text-sky-300 border border-slate-700 rounded-lg shadow-2xl flex items-center gap-2 text-xs font-semibold backdrop-blur-md transition-all hover:scale-105"
-            title="Mở lại bảng hiệu chỉnh trục & thông số"
+            title={language === 'en' ? 'Open inspector & engineering panels' : language === 'ko' ? '파라미터 및 인스펙터 패널 열기' : 'Mở lại bảng hiệu chỉnh trục & thông số'}
           >
             <Sliders className="w-4 h-4 text-sky-400" />
-            <span>Mở bảng thông số</span>
+            <span>{t('inspector.title')}</span>
           </button>
         )}
       </div>
